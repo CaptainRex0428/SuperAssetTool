@@ -4,32 +4,17 @@
 #include "SPAST_BatchEditorAssetsTool.h"
 #include "DebugMessage.h"
 
-#include <iostream>
-#include <string>
-#include <regex>
-#include <format>
-
-#define ColumWidth_1 20
-#define ColumWidth_2 35
-
-#define ColumnPatternContent "|{0:{1}}|{2:{3}}|"
-#define ColumnPatternHeader "|{0:-<{1}}|{2:-^{3}}|"
-#define ColumnPatternFooter "|{0:><{1}}|{2:=^{3}}|"
-#define Column(colum_pattern,column1_content,column2_content) std::format(colum_pattern, column1_content, ColumWidth_1, column2_content, ColumWidth_2)
 
 void USPAST_BatchEditorAssetsTool::DebugTool() {
 
 };
 
-void USPAST_BatchEditorAssetsTool::DebugAssetsName() {
-
-	for (auto AssetData : UEditorUtilityLibrary::GetSelectedAssetData()) {
-		SPAST_PrintLog_SCREEN(GetPrefix(AssetData), AssetSTD::SPAST_MSG_Tips);
-		SPAST_PrintLog_OUTPUTLOG(GetPrefix(AssetData));
-	}
+void USPAST_BatchEditorAssetsTool::CheckAssetsName(TArray<FAssetData> AssetsData) {
+	SPAST_PrintLog_OUTPUTLOG("DebugAssetsName is under development.");
+	SPAST_PrintLog_SCREEN((FString)"DebugAssetsName is under development.", AssetSTD::SPAST_MSG_Warning);
 };
 
-void USPAST_BatchEditorAssetsTool::DebugAssetsClass(TArray<FAssetData> AssetsData) {
+void USPAST_BatchEditorAssetsTool::CheckAssetsClass(TArray<FAssetData> AssetsData) {
 
 	int count = 0;
 
@@ -39,7 +24,7 @@ void USPAST_BatchEditorAssetsTool::DebugAssetsClass(TArray<FAssetData> AssetsDat
 		FString Column_Header = Column(ColumnPatternHeader, "Index", count).c_str();
 		SPAST_PrintLog_OUTPUTLOG(Column_Header);
 
-		DebugAssetClass(AssetData);
+		CheckAssetClass(AssetData);
 	}
 
 	FString Column_Footer = Column(ColumnPatternFooter, "Assets Count", count).c_str();
@@ -48,11 +33,11 @@ void USPAST_BatchEditorAssetsTool::DebugAssetsClass(TArray<FAssetData> AssetsDat
 
 };
 
-void USPAST_BatchEditorAssetsTool::DebugAssetClass(FAssetData AssetData) {
+void USPAST_BatchEditorAssetsTool::CheckAssetClass(FAssetData AssetData) {
 	
 	std::string AssetNameResult = TCHAR_TO_UTF8(*AssetData.AssetName.ToString());
 	std::string AssetClassResult = TCHAR_TO_UTF8(*AssetData.GetClass()->GetName());
-	std::string AssetPrefixCheck = (CheckSTDPrefix(AssetData)) ? "V" : "X";
+	std::string AssetPrefixCheck = CHECKPREFIX("-","V","X");
 
 
 	// output log
@@ -91,8 +76,23 @@ const FString USPAST_BatchEditorAssetsTool::GetSTDPrefix(FAssetData& AssetData) 
 	return STD_Prefix ? * STD_Prefix : NULL_FSTRING;
 };
 
-bool USPAST_BatchEditorAssetsTool::CheckSTDPrefix(FAssetData& AssetData) {
-	return GetSTDPrefix(AssetData) == GetPrefix(AssetData);
+int USPAST_BatchEditorAssetsTool::CheckSTDPrefix(FAssetData& AssetData) {
+	
+	FString AssetPrefix = GetPrefix(AssetData);
+	FString AssetSTDPrefix = GetSTDPrefix(AssetData);
+	
+	if (AssetSTDPrefix == NULL_FSTRING) {
+		return 2;
+	}
+	else {
+		if (AssetSTDPrefix == AssetPrefix) {
+			return 1;
+		}
+		else {
+			return 0;
+		}
+	}
+
 };
 
 void USPAST_BatchEditorAssetsTool::FixSTDPrefix(FAssetData& AssetData) {

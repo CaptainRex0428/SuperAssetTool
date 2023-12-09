@@ -7,6 +7,7 @@
 
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "Materials/MaterialParameterCollection.h"
+#include "Materials/MaterialInstanceConstant.h"
 
 namespace AssetSTD {
 
@@ -20,6 +21,7 @@ namespace AssetSTD {
 
 		{UMaterial::StaticClass(),"M_"},
 		{UMaterialInstance::StaticClass(),"MI_"},
+		{UMaterialInstanceConstant::StaticClass(),"MI_"},
 		{UMaterialParameterCollection::StaticClass(),"MPC_"},
 		
 		{UStaticMesh::StaticClass(),"SM_"},
