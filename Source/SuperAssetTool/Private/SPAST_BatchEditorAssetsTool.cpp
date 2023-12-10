@@ -4,14 +4,13 @@
 #include "SPAST_BatchEditorAssetsTool.h"
 #include "DebugMessage.h"
 
-
 void USPAST_BatchEditorAssetsTool::DebugTool() {
 
 };
 
 void USPAST_BatchEditorAssetsTool::CheckAssetsName(TArray<FAssetData> AssetsData) {
 	SPAST_PrintLog_OUTPUTLOG("DebugAssetsName is under development.");
-	SPAST_PrintLog_SCREEN((FString)"DebugAssetsName is under development.", AssetSTD::SPAST_MSG_Warning);
+	SPAST_PrintLog_SCREEN((FString)"DebugAssetsName is under development.", AssetSTD::SPAST_MSG_Warning); 
 };
 
 void USPAST_BatchEditorAssetsTool::CheckAssetsClass(TArray<FAssetData> AssetsData) {
@@ -21,14 +20,18 @@ void USPAST_BatchEditorAssetsTool::CheckAssetsClass(TArray<FAssetData> AssetsDat
 	for (auto AssetData : AssetsData) {
 		count++;
 
+		// output log header
 		FString Column_Header = Column(ColumnPatternHeader, "Index", count).c_str();
 		SPAST_PrintLog_OUTPUTLOG(Column_Header);
 
 		CheckAssetClass(AssetData);
 	}
 
+	// output log footer
 	FString Column_Footer = Column(ColumnPatternFooter, "Assets Count", count).c_str();
 	SPAST_PrintLog_OUTPUTLOG(Column_Footer);
+	
+	// output screen count
 	SPAST_PrintLog_SCREEN(FString::FromInt(count),AssetSTD::SPAST_MSG_Tips);
 
 };
@@ -37,7 +40,7 @@ void USPAST_BatchEditorAssetsTool::CheckAssetClass(FAssetData AssetData) {
 	
 	std::string AssetNameResult = TCHAR_TO_UTF8(*AssetData.AssetName.ToString());
 	std::string AssetClassResult = TCHAR_TO_UTF8(*AssetData.GetClass()->GetName());
-	std::string AssetPrefixCheck = CHECKPREFIX("-","V","X");
+	std::string AssetPrefixCheck = CHECK_RESULT_3State(CheckSTDPrefix(AssetData),"-","V","X");
 
 
 	// output log
@@ -46,6 +49,7 @@ void USPAST_BatchEditorAssetsTool::CheckAssetClass(FAssetData AssetData) {
 	SPAST_PrintLog_OUTPUTLOG(Column(ColumnPatternContent, "Asset Class", AssetClassResult).c_str());
 	SPAST_PrintLog_OUTPUTLOG(Column(ColumnPatternContent, "Asset Prefix Check",AssetPrefixCheck).c_str());
 
+	// output screen
 	SPAST_PrintLog_SCREEN((FString)std::format("|{:^3}|{:^25}|{:^25}|",AssetPrefixCheck,AssetClassResult,AssetNameResult).c_str(), AssetSTD::SPAST_MSG_Tips);
 }
 
