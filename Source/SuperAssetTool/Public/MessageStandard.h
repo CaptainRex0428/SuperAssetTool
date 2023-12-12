@@ -1,5 +1,6 @@
 #pragma once
 
+
 namespace AssetSTD {
 
 	enum MessageType {
@@ -13,4 +14,5 @@ namespace AssetSTD {
 		{SPAST_MSG_Warning,FColor::Yellow},
 		{SPAST_MSG_Tips,FColor::Cyan}
 	};
+
 }
