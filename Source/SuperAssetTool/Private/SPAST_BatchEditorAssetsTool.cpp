@@ -1,11 +1,18 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SPAST_BatchEditorAssetsTool.h"
 #include "DebugMessage.h"
 
-void USPAST_BatchEditorAssetsTool::DebugTool() {
 
+// Public Functions
+
+void USPAST_BatchEditorAssetsTool::DebugTool() {
+	for (auto asset : UEditorUtilityLibrary::GetSelectedAssetData()) {
+		auto assetPathInfo = GetAssetPathInfo(asset);
+		SPAST_Print(std::get<0>(assetPathInfo), AssetSTD::SPAST_MSG_Tips);
+		SPAST_Print(std::get<1>(assetPathInfo), AssetSTD::SPAST_MSG_Tips);
+		SPAST_Print(std::get<2>(assetPathInfo), AssetSTD::SPAST_MSG_Tips);
+	}
 };
 
 void USPAST_BatchEditorAssetsTool::CheckAssetsName(TArray<FAssetData> AssetsData) {
@@ -21,14 +28,14 @@ void USPAST_BatchEditorAssetsTool::CheckAssetsClass(TArray<FAssetData> AssetsDat
 		count++;
 
 		// output log header
-		FString Column_Header = Column(ColumnPatternHeader, "Index", count).c_str();
+		FString Column_Header = TABLESTRING_2Column(TablePattern_2Column_Header, "Index", count).c_str();
 		SPAST_PrintLog_OUTPUTLOG(Column_Header);
 
 		CheckAssetClass(AssetData);
 	}
 
 	// output log footer
-	FString Column_Footer = Column(ColumnPatternFooter, "Assets Count", count).c_str();
+	FString Column_Footer = TABLESTRING_2Column(TablePattern_2Column_Footer, "Assets Count", count).c_str();
 	SPAST_PrintLog_OUTPUTLOG(Column_Footer);
 	
 	// output screen count
@@ -36,21 +43,36 @@ void USPAST_BatchEditorAssetsTool::CheckAssetsClass(TArray<FAssetData> AssetsDat
 
 };
 
+TArray<FAssetData> USPAST_BatchEditorAssetsTool::DuplicateAssets(TArray<FAssetData> AssetsData, FString SubfolderName,
+	bool UseSubfolder, bool OverwriteExists,
+	int DuplicateNum)
+{
+	TArray<FAssetData> DuplicatedAssets;
+	int Counter = 0;
+
+	for (auto Asset : AssetsData) {
+		auto AssetPathInfo = GetAssetPathInfo(Asset);
+	}
+
+	return DuplicatedAssets;
+};
+
+
+// Private Functions
+
 void USPAST_BatchEditorAssetsTool::CheckAssetClass(FAssetData AssetData) {
 	
 	std::string AssetNameResult = TCHAR_TO_UTF8(*AssetData.AssetName.ToString());
 	std::string AssetClassResult = TCHAR_TO_UTF8(*AssetData.GetClass()->GetName());
 	std::string AssetPrefixCheck = CHECK_RESULT_3State(CheckSTDPrefix(AssetData),"-","V","X");
 
-
 	// output log
-
-	SPAST_PrintLog_OUTPUTLOG(Column(ColumnPatternContent, "Asset Name", AssetNameResult).c_str());
-	SPAST_PrintLog_OUTPUTLOG(Column(ColumnPatternContent, "Asset Class", AssetClassResult).c_str());
-	SPAST_PrintLog_OUTPUTLOG(Column(ColumnPatternContent, "Asset Prefix Check",AssetPrefixCheck).c_str());
+	SPAST_PrintLog_OUTPUTLOG(TABLESTRING_2Column(TablePattern_2Column_Content, "Asset Name", AssetNameResult).c_str());
+	SPAST_PrintLog_OUTPUTLOG(TABLESTRING_2Column(TablePattern_2Column_Content, "Asset Class", AssetClassResult).c_str());
+	SPAST_PrintLog_OUTPUTLOG(TABLESTRING_2Column(TablePattern_2Column_Content, "Asset Prefix Check",AssetPrefixCheck).c_str());
 
 	// output screen
-	SPAST_PrintLog_SCREEN((FString)std::format("|{:^3}|{:^25}|{:^25}|",AssetPrefixCheck,AssetClassResult,AssetNameResult).c_str(), AssetSTD::SPAST_MSG_Tips);
+	SPAST_PrintLog_SCREEN(std::format("|{:^3}|{:^25}|{:^25}|",AssetPrefixCheck,AssetClassResult,AssetNameResult).c_str(), AssetSTD::SPAST_MSG_Tips);
 }
 
  const FString USPAST_BatchEditorAssetsTool::GetPrefix(FAssetData& AssetData) {
@@ -101,4 +123,19 @@ int USPAST_BatchEditorAssetsTool::CheckSTDPrefix(FAssetData& AssetData) {
 
 void USPAST_BatchEditorAssetsTool::FixSTDPrefix(FAssetData& AssetData) {
 
+};
+
+/**
+* @brief Return asset name, asset package name(directory path), asset full path
+* 
+* @return A 3-element tuple(std::tuple) about asset path info.\n
+* @return ---------------------
+* @retval std::get<0> AssetName
+* @retval std::get<1> AssetPackagePath
+* @retval std::get<2> AssetFullPath
+*		
+* @param <AssetData> Asset Data in UE mode
+*/
+std::tuple<FString, FString, FString> USPAST_BatchEditorAssetsTool::GetAssetPathInfo(FAssetData AssetData) {
+	return { AssetData.AssetName.ToString(),AssetData.PackagePath.ToString(), AssetData.GetObjectPathString() };
 };
