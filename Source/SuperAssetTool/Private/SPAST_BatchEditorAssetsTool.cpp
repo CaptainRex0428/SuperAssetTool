@@ -6,6 +6,7 @@
 // ------------------------------(Call In Editor)------------------------------//
 
 void USPAST_BatchEditorAssetsTool::dbTool() {
+	SPAST_Print("TEST Message",MSGTARGET_SCREEN_OUTPUTLOG_DIALOG);
 }
 
 void USPAST_BatchEditorAssetsTool::cClass() {
@@ -22,8 +23,7 @@ void USPAST_BatchEditorAssetsTool::mdDuplicate(FString SubfolderName,
 // ------------------------------Public Functions------------------------------//
 
 void USPAST_BatchEditorAssetsTool::SPAST_CheckAssetsName(TArray<FAssetData> AssetsData) {
-	SPAST_PrintLog_OUTPUTLOG("DebugAssetsName is under development.", AssetSTD::SPAST_MSG_Tips);
-	SPAST_PrintLog_SCREEN((FString)"DebugAssetsName is under development.", AssetSTD::SPAST_MSG_Warning); 
+	SPAST_Print("DebugAssetsName is under development.",MSGTARGET_SCREEN_OUTPUTLOG);
 }
 
 void USPAST_BatchEditorAssetsTool::SPAST_CheckAssetsClass(TArray<FAssetData> AssetsData) {
@@ -195,11 +195,9 @@ TArray<FAssetData> USPAST_BatchEditorAssetsTool::DuplicateAsset(FString Destinat
 	FString assetName = FPaths::GetBaseFilename(SourceAssetPath);
 	
 	int first_subfix = overwrite ? 1:MaxNumSubfix(DestinationDirectory, assetName) + 1;
-
-	SPAST_Print(FString::FromInt(first_subfix));
 	
 	for (int count = 0; count < DuplicateNum; count++) {
-		FString DestinationAssetPath = FPaths::Combine(DestinationDirectory, assetName + "_" + FormateInt2String((first_subfix + count), 2).c_str());
+		FString DestinationAssetPath = FPaths::Combine(DestinationDirectory, assetName + "_" + FormatInt2String((first_subfix + count), 2).c_str());
 
 		if (UEditorAssetLibrary::DoesAssetExist(DestinationAssetPath) && overwrite) {
 			UEditorAssetLibrary::DeleteLoadedAsset(UEditorAssetLibrary::LoadAsset(DestinationAssetPath));
@@ -229,7 +227,6 @@ int USPAST_BatchEditorAssetsTool::MaxNumSubfix(FString DirectoryPath, FString As
 	TArray<FString> AssetsList = UEditorAssetLibrary::ListAssets(DirectoryPath, false);
 
 	for (auto asset : AssetsList) {
-		SPAST_Print("StartFind1");
 
 		FString basename = FPaths::GetBaseFilename(asset);
 

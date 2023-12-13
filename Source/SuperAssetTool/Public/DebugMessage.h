@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MessageStandard.h"
+#include "Misc/MessageDialog.h"
 
 #include <format>
 
@@ -20,11 +21,19 @@
 #define TABLESTRING_2Column(colum_pattern,column1_content,column2_content) std::format(colum_pattern, column1_content, ColumWidth_1, column2_content, ColumWidth_2)
 #define TABLESTRING_3Column(colum_pattern,column1_content,column2_content,column3_content) std::format(colum_pattern, column1_content, ColumWidth_1, column2_content, ColumWidth_2, column3_content,ColumWidth_3)
 
-void SPAST_PrintLog_SCREEN(const FString& Message, AssetSTD::MessageType Type) {
+#define MSGTARGET_SCREEN {AssetSTD::SCREEN}
+#define MSGTARGET_OUTPUTLOG {AssetSTD::OUTPUTLOG}
+#define MSGTARGET_DIALOG {AssetSTD::DIALOG}
+#define MSGTARGET_SCREEN_OUTPUTLOG {AssetSTD::SCREEN,AssetSTD::OUTPUTLOG}
+#define MSGTARGET_SCREEN_DIALOG {AssetSTD::SCREEN,AssetSTD::DIALOG}
+#define MSGTARGET_OUTPUTLOG_DIALOG {AssetSTD::DIALOG,AssetSTD::OUTPUTLOG}
+#define MSGTARGET_SCREEN_OUTPUTLOG_DIALOG {AssetSTD::SCREEN,AssetSTD::DIALOG,AssetSTD::OUTPUTLOG}
+
+void SPAST_PrintLog_SCREEN(const FString& Message, AssetSTD::MessageLevel Type) {
 	GEngine->AddOnScreenDebugMessage(-1, 5, *(AssetSTD::MessageColor.Find(Type)), Message);
 }
 
-void SPAST_PrintLog_OUTPUTLOG(const FString& Message, AssetSTD::MessageType Type) {
+void SPAST_PrintLog_OUTPUTLOG(const FString& Message, AssetSTD::MessageLevel Type) {
 	if(Type == AssetSTD::SPAST_MSG_Error)
 		UE_LOG(LogTemp, Error, TEXT("%s"), *Message)
 	else if (Type == AssetSTD::SPAST_MSG_Warning)
@@ -33,8 +42,26 @@ void SPAST_PrintLog_OUTPUTLOG(const FString& Message, AssetSTD::MessageType Type
 		UE_LOG(LogTemp, Log, TEXT("%s"), *Message)
 }
 
-void SPAST_Print(const FString& Message, AssetSTD::MessageType Type = AssetSTD::SPAST_MSG_Tips) {
-	SPAST_PrintLog_SCREEN(Message, Type);
-	SPAST_PrintLog_OUTPUTLOG(Message, Type);
+void SPAST_Print(const FString& Message,
+	TArray<AssetSTD::MessageTarget> Target = MSGTARGET_SCREEN_OUTPUTLOG,
+	AssetSTD::MessageLevel Type = AssetSTD::SPAST_MSG_Tips,
+	const FString& Title = "Message",
+	EAppMsgType::Type ButtonType = EAppMsgType::Ok,
+	EAppReturnType::Type * DialogReturn = nullptr)
+{
+	if (Target.Contains(AssetSTD::SCREEN))
+		SPAST_PrintLog_SCREEN(Message, Type);
+
+	if (Target.Contains(AssetSTD::OUTPUTLOG))
+		SPAST_PrintLog_OUTPUTLOG(Message, Type);
+
+	if (Target.Contains(AssetSTD::DIALOG)) {
+		FString TitleResult = FString::Format(TEXT("[{0}]_{1}"), { *AssetSTD::MessageLevelToString.Find(Type), Title});
+		auto DialogResult = FMessageDialog::Open(ButtonType, FText::FromString(Message), FText::FromString(TitleResult));
+		if (DialogReturn) {
+			* DialogReturn = DialogResult;
+		}
+	}
+		
 }
 
