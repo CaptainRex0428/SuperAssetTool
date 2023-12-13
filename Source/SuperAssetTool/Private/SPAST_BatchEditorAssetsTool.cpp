@@ -6,7 +6,6 @@
 // ------------------------------(Call In Editor)------------------------------//
 
 void USPAST_BatchEditorAssetsTool::dbTool() {
-	SPAST_Print("TEST Message",MSGTARGET_SCREEN_OUTPUTLOG_DIALOG);
 }
 
 void USPAST_BatchEditorAssetsTool::cClass() {

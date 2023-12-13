@@ -56,7 +56,7 @@ void SPAST_Print(const FString& Message,
 		SPAST_PrintLog_OUTPUTLOG(Message, Type);
 
 	if (Target.Contains(AssetSTD::DIALOG)) {
-		FString TitleResult = FString::Format(TEXT("[{0}]_{1}"), { *AssetSTD::MessageLevelToString.Find(Type), Title});
+		FString TitleResult = FString::Format(TEXT("[{0}]{1}"), { *AssetSTD::MessageLevelToString.Find(Type), Title});
 		auto DialogResult = FMessageDialog::Open(ButtonType, FText::FromString(Message), FText::FromString(TitleResult));
 		if (DialogReturn) {
 			* DialogReturn = DialogResult;

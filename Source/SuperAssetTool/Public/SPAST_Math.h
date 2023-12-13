@@ -32,19 +32,38 @@ std::string FormatInt2String(int num, int formatNum = 2) {
 	return std::format("{0:0>{1}}",num,formatNum);
 }
 
-std::string LStrip(std::string * originString) {
-	const char * ptr =  (*originString).c_str();
+std::string LStrip(std::string * originStringPtr) {
+	const char * ptr =  (*originStringPtr).c_str();
 
 	int substring_first = 0;
 	
-	for (int index = 0; index < (*originString).length(); index++) {
+	for (int index = 0; index < (*originStringPtr).length(); index++) {
 		if (*(ptr + index) != 32)
 		{
 			substring_first = index;
-		};
+			break;
+		}
 	} 
 
-	* originString = (*originString).substr(substring_first, (*originString->end()));
+	*originStringPtr = (*originStringPtr).substr(substring_first, (*originStringPtr).length());
 
-	return * originString;
+	return *originStringPtr;
+}
+
+std::string RStrip(std::string* originStringPtr) {
+	const char* ptr = (*originStringPtr).c_str();
+
+	int substring_last = (*originStringPtr).length();
+
+	for (int index = substring_last; index > 0; index--) {
+		if (*(ptr + index-1) != 32)
+		{
+			substring_last = index;
+			break;
+		}
+	}
+
+	*originStringPtr = (*originStringPtr).substr(0,substring_last);
+
+	return *originStringPtr;
 }
