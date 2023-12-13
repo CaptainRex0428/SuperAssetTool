@@ -6,23 +6,6 @@
 // ------------------------------(Call In Editor)------------------------------//
 
 void USPAST_BatchEditorAssetsTool::dbTool() {
-	for (auto a : UEditorUtilityLibrary::GetSelectedAssetData()) {
-		FString path = FPaths::Combine(a.PackagePath.ToString(),a.AssetName.ToString());
-		SPAST_Print(a.AssetName.ToString());
-		SPAST_Print(UEditorAssetLibrary::DoesDirectoryExist(path) ? "V":"X");
-
-		SPAST_Print(a.PackagePath.ToString());
-		SPAST_Print(a.GetObjectPathString());
-
-		SPAST_Print(path);
-
-		TArray<FString> AssetsList = UEditorAssetLibrary::ListAssets(path, true);
-		for (auto p : AssetsList) {
-			SPAST_Print(p);
-		}
-
-		SPAST_Print(FString::FromInt(MaxNumSubfix(path, a.AssetName.ToString())));
-	};
 }
 
 void USPAST_BatchEditorAssetsTool::cClass() {
