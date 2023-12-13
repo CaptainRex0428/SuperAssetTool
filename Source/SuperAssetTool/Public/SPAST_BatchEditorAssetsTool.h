@@ -51,13 +51,22 @@ public:
 	* @note ----> CallInEditor
 	*/
 	UFUNCTION(CallInEditor, Category = "SPAST_Debug")
-	void DebugTool();
+	void dbTool();
 
 	/**
 	* @note ----> CallInEditor
 	*/
 	UFUNCTION(CallInEditor, Category = "SPAST_Check")
-	void CheckAssetsClass();
+	void cClass();
+
+	/**
+	* @note ----> CallInEditor
+	*/
+	UFUNCTION(CallInEditor, Category = "SPAST_Modify")
+	void mdDuplicate(FString SubfolderName,
+		bool UseSubfolder = false, bool OverwriteExists = false,
+		int DuplicateNum = 1);
+
 
 // ------------------------------Public Functions------------------------------//
 	
@@ -71,9 +80,10 @@ public:
 
 	// duplicate assets
 	UFUNCTION(BlueprintCallable, Category = "SPAST_Modify")
-	TArray<FAssetData> SPAST_DuplicateAssets(TArray<FAssetData> AssetsData, FString SubfolderName = "Duplicated Assets",
-		bool UseSubfolder = false, bool OverwriteExists = false,
-		int DuplicateNum = 1);
+	TArray<FAssetData> SPAST_DuplicateAssets(TArray<FAssetData> AssetsData,
+		FString SubfolderName,
+		bool UseSubfolder, bool OverwriteExists,
+		int DuplicateNum);
 
 
 //------------------------------Private Functions------------------------------//

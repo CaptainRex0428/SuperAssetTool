@@ -5,18 +5,35 @@
 // ------------------------------Public Functions------------------------------//
 // ------------------------------(Call In Editor)------------------------------//
 
-void USPAST_BatchEditorAssetsTool::DebugTool() {
-	TArray<FAssetData> a = UEditorUtilityLibrary::GetSelectedAssetData();
+void USPAST_BatchEditorAssetsTool::dbTool() {
+	for (auto a : UEditorUtilityLibrary::GetSelectedAssetData()) {
+		FString path = FPaths::Combine(a.PackagePath.ToString(),a.AssetName.ToString());
+		SPAST_Print(a.AssetName.ToString());
+		SPAST_Print(UEditorAssetLibrary::DoesDirectoryExist(path) ? "V":"X");
 
-	for (auto b : a) {
-		DuplicateAsset(b.PackagePath.ToString(), b.GetObjectPathString(), 3, true);
-	}
-		
-};
+		SPAST_Print(a.PackagePath.ToString());
+		SPAST_Print(a.GetObjectPathString());
 
-void USPAST_BatchEditorAssetsTool::CheckAssetsClass() {
+		SPAST_Print(path);
+
+		TArray<FString> AssetsList = UEditorAssetLibrary::ListAssets(path, true);
+		for (auto p : AssetsList) {
+			SPAST_Print(p);
+		}
+
+		SPAST_Print(FString::FromInt(MaxNumSubfix(path, a.AssetName.ToString())));
+	};
+}
+
+void USPAST_BatchEditorAssetsTool::cClass() {
 	SPAST_CheckAssetsClass(UEditorUtilityLibrary::GetSelectedAssetData());
-};
+}
+
+void USPAST_BatchEditorAssetsTool::mdDuplicate(FString SubfolderName,
+	bool UseSubfolder, bool OverwriteExists,
+	int DuplicateNum) {
+	SPAST_DuplicateAssets(UEditorUtilityLibrary::GetSelectedAssetData(), SubfolderName, UseSubfolder, OverwriteExists, DuplicateNum);
+}
 
 
 // ------------------------------Public Functions------------------------------//
@@ -24,7 +41,7 @@ void USPAST_BatchEditorAssetsTool::CheckAssetsClass() {
 void USPAST_BatchEditorAssetsTool::SPAST_CheckAssetsName(TArray<FAssetData> AssetsData) {
 	SPAST_PrintLog_OUTPUTLOG("DebugAssetsName is under development.", AssetSTD::SPAST_MSG_Tips);
 	SPAST_PrintLog_SCREEN((FString)"DebugAssetsName is under development.", AssetSTD::SPAST_MSG_Warning); 
-};
+}
 
 void USPAST_BatchEditorAssetsTool::SPAST_CheckAssetsClass(TArray<FAssetData> AssetsData) {
 
@@ -47,33 +64,50 @@ void USPAST_BatchEditorAssetsTool::SPAST_CheckAssetsClass(TArray<FAssetData> Ass
 	// output screen count
 	SPAST_PrintLog_SCREEN(FString::FromInt(count),AssetSTD::SPAST_MSG_Tips);
 
-};
+}
 
-TArray<FAssetData> USPAST_BatchEditorAssetsTool::SPAST_DuplicateAssets(TArray<FAssetData> AssetsData, FString SubfolderName,
-	bool UseSubfolder, bool OverwriteExists,
+/**
+* @brief Duplicate a series assets. Overwrite is not recommended for material type assets.
+*
+* @param <AssetsData>		[TArray<FAssetData>] UEditorUtilityLibrary::GetSelectedAssetData()
+* @param <SubfolderName>	[FString] The sub folder name to duplicate the new assets.
+* @param <UseSubfolder>		[bool] Whether use sub folder to duplicate the new assets.
+* @param <OverwriteExists>	[bool]	  Whether overwrite the existed asset. index will start with 1. This is not recommended for material type assets.
+* @param <DuplicateNum>		[int]	  How many asset to duplicate.
+* 
+* @return [TArray<FAssetData>] An array of duplicated assets.
+*/
+TArray<FAssetData> USPAST_BatchEditorAssetsTool::SPAST_DuplicateAssets(TArray<FAssetData> AssetsData, 
+	FString SubfolderName,
+	bool UseSubfolder,
+	bool OverwriteExists,
 	int DuplicateNum)
 {
 	TArray<FAssetData> DuplicatedAssets;
-	int Counter = 0;
 
 	for (auto Asset : AssetsData) {
 		auto AssetPathInfo = GetAssetPathInfo(Asset);
 		
 		if (UseSubfolder) {
-			FString destinationDirectory = FPaths::Combine(std::get<1>(AssetPathInfo), SubfolderName);
+			FString duplicatedDirectoryName = SubfolderName == NULL_FSTRING || SubfolderName == std::get<0>(AssetPathInfo) ? (std::get<0>(AssetPathInfo) + "_Duplicated") : SubfolderName;
+			FString destinationDirectory = FPaths::Combine(std::get<1>(AssetPathInfo), duplicatedDirectoryName);
 			
 			if (!UEditorAssetLibrary::DoesDirectoryExist(destinationDirectory)) {
 				UEditorAssetLibrary::MakeDirectory(destinationDirectory);
 			}
 
+			DuplicatedAssets.Append(DuplicateAsset(destinationDirectory, std::get<2>(AssetPathInfo),DuplicateNum,OverwriteExists));
+
 		}
 		else {
+			FString destinationDirectory = std::get<1>(AssetPathInfo);
 
+			DuplicatedAssets.Append(DuplicateAsset(destinationDirectory, std::get<2>(AssetPathInfo), DuplicateNum, OverwriteExists));
 		}
 	}
 
 	return DuplicatedAssets;
-};
+}
 
 //------------------------------Private Functions------------------------------//
 
@@ -112,12 +146,12 @@ void USPAST_BatchEditorAssetsTool::CheckAssetClass(FAssetData AssetData) {
 	}
 
 	return prefix_found ? prefix.c_str(): NULL_FSTRING;
-};
+}
 
 const FString USPAST_BatchEditorAssetsTool::GetSTDPrefix(FAssetData& AssetData) {
 	auto STD_Prefix = AssetSTD::EditorPrefix.Find(AssetData.GetClass());
 	return STD_Prefix ? * STD_Prefix : NULL_FSTRING;
-};
+}
 
 int USPAST_BatchEditorAssetsTool::CheckSTDPrefix(FAssetData& AssetData) {
 	
@@ -136,11 +170,11 @@ int USPAST_BatchEditorAssetsTool::CheckSTDPrefix(FAssetData& AssetData) {
 		}
 	}
 
-};
+}
 
 void USPAST_BatchEditorAssetsTool::FixSTDPrefix(FAssetData& AssetData) {
 
-};
+}
 
 /**
 * @brief Return asset name, asset package name(directory path), asset full path
@@ -157,6 +191,16 @@ std::tuple<FString, FString, FString> USPAST_BatchEditorAssetsTool::GetAssetPath
 	return { AssetData.AssetName.ToString(),AssetData.PackagePath.ToString(), AssetData.GetObjectPathString() };
 };
 
+/**
+ * @brief Duplicate a single asset. Overwrite is not recommended for material type assets.
+ * 
+ * @param <DestinationDirectory>[FString] The folder name to duplicate the asset.
+ * @param <SourceAssetPath>		[FString] The source asset path.
+ * @param <DuplicateNum>		[int]	  How many asset to duplicate.
+ * @param <Overwrite>			[bool]	  Whether overwrite the existed asset. index will start with 1. This is not recommended for material type assets.
+ * 
+ * @return [TArray<FAssetData>] An array of duplicated assets. 
+ */
 TArray<FAssetData> USPAST_BatchEditorAssetsTool::DuplicateAsset(FString DestinationDirectory, FString SourceAssetPath, int DuplicateNum, bool overwrite) 
 {
 	TArray<FAssetData> DuplicatedAssets;
@@ -164,6 +208,8 @@ TArray<FAssetData> USPAST_BatchEditorAssetsTool::DuplicateAsset(FString Destinat
 	FString assetName = FPaths::GetBaseFilename(SourceAssetPath);
 	
 	int first_subfix = overwrite ? 1:MaxNumSubfix(DestinationDirectory, assetName) + 1;
+
+	SPAST_Print(FString::FromInt(first_subfix));
 	
 	for (int count = 0; count < DuplicateNum; count++) {
 		FString DestinationAssetPath = FPaths::Combine(DestinationDirectory, assetName + "_" + FormateInt2String((first_subfix + count), 2).c_str());
@@ -177,8 +223,6 @@ TArray<FAssetData> USPAST_BatchEditorAssetsTool::DuplicateAsset(FString Destinat
 		DuplicatedAssets.Add(assetDuplicated);
 	}
 
-
-
 	return DuplicatedAssets;
 };
 
@@ -189,11 +233,14 @@ int USPAST_BatchEditorAssetsTool::MaxNumSubfix(FString DirectoryPath, FString As
 	TArray<FString> AssetsList = UEditorAssetLibrary::ListAssets(DirectoryPath, false);
 
 	for (auto asset : AssetsList) {
+		SPAST_Print("StartFind1");
 
 		FString basename = FPaths::GetBaseFilename(asset);
 
 		if (basename.StartsWith(AssetName) && basename != AssetName) 
 		{
+			SPAST_Print("StartFind2");
+
 			int sourceLength = AssetName.Len();
 
 			const char * stdAssetName = TCHAR_TO_UTF8(*basename);
