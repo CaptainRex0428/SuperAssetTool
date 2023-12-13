@@ -126,6 +126,7 @@ void USPAST_BatchEditorAssetsTool::CheckAssetClass(FAssetData AssetData) {
 	SPAST_PrintLog_SCREEN(std::format("|{:^3}|{:^25}|{:^25}|",AssetPrefixCheck,AssetClassResult,AssetNameResult).c_str(), AssetSTD::SPAST_MSG_Tips);
 }
 
+
  const FString USPAST_BatchEditorAssetsTool::GetPrefix(FAssetData& AssetData) {
 	FString assetname = AssetData.AssetName.ToString();
 
@@ -148,10 +149,12 @@ void USPAST_BatchEditorAssetsTool::CheckAssetClass(FAssetData AssetData) {
 	return prefix_found ? prefix.c_str(): NULL_FSTRING;
 }
 
+
 const FString USPAST_BatchEditorAssetsTool::GetSTDPrefix(FAssetData& AssetData) {
 	auto STD_Prefix = AssetSTD::EditorPrefix.Find(AssetData.GetClass());
 	return STD_Prefix ? * STD_Prefix : NULL_FSTRING;
 }
+
 
 int USPAST_BatchEditorAssetsTool::CheckSTDPrefix(FAssetData& AssetData) {
 	
@@ -171,6 +174,7 @@ int USPAST_BatchEditorAssetsTool::CheckSTDPrefix(FAssetData& AssetData) {
 	}
 
 }
+
 
 void USPAST_BatchEditorAssetsTool::FixSTDPrefix(FAssetData& AssetData) {
 
@@ -226,6 +230,15 @@ TArray<FAssetData> USPAST_BatchEditorAssetsTool::DuplicateAsset(FString Destinat
 	return DuplicatedAssets;
 };
 
+/**
+* @brief Get the max subfix of the existing replicates of a specific asset in a specific directory(recursive false).
+* 
+* @param <DirectoryPath> [FString]
+* @param <AssetName> [FString]
+* 
+* @return [int] the max existing subfix.
+* 
+*/
 int USPAST_BatchEditorAssetsTool::MaxNumSubfix(FString DirectoryPath, FString AssetName) {
 	
 	int maxSubfix = 0;
