@@ -32,7 +32,7 @@ std::string FormatInt2String(int num, int formatNum = 2) {
 	return std::format("{0:0>{1}}",num,formatNum);
 }
 
-std::string LStrip(std::string * originStringPtr) {
+const char * LStrip(std::string * originStringPtr) {
 	const char * ptr =  (*originStringPtr).c_str();
 
 	int substring_first = 0;
@@ -47,10 +47,10 @@ std::string LStrip(std::string * originStringPtr) {
 
 	*originStringPtr = (*originStringPtr).substr(substring_first, (*originStringPtr).length());
 
-	return *originStringPtr;
+	return (*originStringPtr).c_str();
 }
 
-std::string RStrip(std::string* originStringPtr) {
+const char * RStrip(std::string* originStringPtr) {
 	const char* ptr = (*originStringPtr).c_str();
 
 	int substring_last = (*originStringPtr).length();
@@ -65,5 +65,11 @@ std::string RStrip(std::string* originStringPtr) {
 
 	*originStringPtr = (*originStringPtr).substr(0,substring_last);
 
-	return *originStringPtr;
+	return (*originStringPtr).c_str();
+}
+
+const char* Strip(std::string* originStringPtr) {
+	LStrip(originStringPtr);
+	RStrip(originStringPtr);
+	return (*originStringPtr).c_str();
 }
