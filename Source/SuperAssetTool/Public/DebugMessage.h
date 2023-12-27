@@ -6,7 +6,7 @@
 #include <format>
 
 
-#define TablePattern_2Column_Content "|{0:{1}}|{2:{3}}|"
+#define TablePattern_2Column_Content "|{0:<{1}}|{2:<{3}}|"
 #define TablePattern_2Column_Header "|{0:-<{1}}|{2:-^{3}}|"
 #define TablePattern_2Column_Footer "|{0:><{1}}|{2:=^{3}}|"
 

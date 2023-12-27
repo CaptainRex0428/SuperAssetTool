@@ -55,9 +55,10 @@ void USPAST_BatchEditorAssetsTool::SPAST_CheckAssetsTexture(TArray<FAssetData> A
 		auto info = GetTexture2DInfo(asset);
 
 		if (info) {
-			SPAST_Print(FString::FromInt(info->Resolution));
-			SPAST_Print(info->iSRGB ? "sRGB" : "No sRGB");
-			SPAST_Print(* AssetSTD::mCompressionSettings2FSrting.Find(info->CompressionSettings));
+			SPAST_Print(TABLESTRING_2Column(TablePattern_2Column_Content, "Resolution", info->Resolution).c_str());
+			SPAST_Print(TABLESTRING_2Column(TablePattern_2Column_Content, "sRGB", info->iSRGB ? "sRGB" : "No sRGB").c_str());
+			SPAST_Print(TABLESTRING_2Column(TablePattern_2Column_Content, "Compression Settings", TCHAR_TO_UTF8(**AssetSTD::mCompressionSettings2FSrting.Find(info->CompressionSettings))).c_str());
+			SPAST_Print(TABLESTRING_2Column(TablePattern_2Column_Content, "Texture Group", TCHAR_TO_UTF8(UTexture::GetTextureGroupString(info->TxGroup))).c_str());
 		}
 	}
 };
@@ -209,10 +210,11 @@ const AssetSTD::sTextureStandardInfo * USPAST_BatchEditorAssetsTool::GetTexture2
 	AssetSTD::sTextureStandardInfo * result = new AssetSTD::sTextureStandardInfo;
 	
 	UTexture2D* assetObj = (UTexture2D*)UEditorAssetLibrary::LoadAsset(assetdata.GetObjectPathString());
-
+	
 	result->CompressionSettings = assetObj->CompressionSettings;
 	result->Resolution = std::max(assetObj->GetImportedSize().X, assetObj->GetImportedSize().Y);
 	result->iSRGB = assetObj->SRGB;
+	result->TxGroup = assetObj->LODGroup;
 
 	return result;
 };

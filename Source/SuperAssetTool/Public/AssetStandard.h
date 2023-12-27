@@ -35,6 +35,7 @@ namespace AssetSTD {
 		int Resolution;
 		TextureCompressionSettings CompressionSettings;
 		bool iSRGB;
+		TextureGroup TxGroup;
 	};
 
 	TMap<TextureCompressionSettings, FString> mCompressionSettings2FSrting{
