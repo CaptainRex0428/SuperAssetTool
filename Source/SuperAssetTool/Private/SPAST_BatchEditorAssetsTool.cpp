@@ -1,15 +1,17 @@
-
 #include "SPAST_BatchEditorAssetsTool.h"
-#include "DebugMessage.h"
 
 // ------------------------------Public Functions------------------------------//
 // ------------------------------(Call In Editor)------------------------------//
 
-void USPAST_BatchEditorAssetsTool::dbTool() {
+void USPAST_BatchEditorAssetsTool::dbTool() {	
 }
 
 void USPAST_BatchEditorAssetsTool::cClass() {
 	SPAST_CheckAssetsClass(UEditorUtilityLibrary::GetSelectedAssetData());
+}
+
+void USPAST_BatchEditorAssetsTool::cTexture() {
+	SPAST_CheckAssetsTexture(UEditorUtilityLibrary::GetSelectedAssetData());
 }
 
 void USPAST_BatchEditorAssetsTool::mdDuplicate(FString SubfolderName,
@@ -34,19 +36,31 @@ void USPAST_BatchEditorAssetsTool::SPAST_CheckAssetsClass(TArray<FAssetData> Ass
 
 		// output log header
 		FString Column_Header = TABLESTRING_2Column(TablePattern_2Column_Header, "Index", count).c_str();
-		SPAST_PrintLog_OUTPUTLOG(Column_Header,AssetSTD::SPAST_MSG_Tips);
+		SPAST_PrintLog_OUTPUTLOG(Column_Header,MsgSTD::SPAST_MSG_Tips);
 
 		CheckAssetClass(AssetData);
 	}
 
 	// output log footer
 	FString Column_Footer = TABLESTRING_2Column(TablePattern_2Column_Footer, "Assets Count", count).c_str();
-	SPAST_PrintLog_OUTPUTLOG(Column_Footer, AssetSTD::SPAST_MSG_Tips);
+	SPAST_PrintLog_OUTPUTLOG(Column_Footer, MsgSTD::SPAST_MSG_Tips);
 	
 	// output screen count
-	SPAST_PrintLog_SCREEN(FString::FromInt(count),AssetSTD::SPAST_MSG_Tips);
+	SPAST_PrintLog_SCREEN(FString::FromInt(count),MsgSTD::SPAST_MSG_Tips);
 
 }
+
+void USPAST_BatchEditorAssetsTool::SPAST_CheckAssetsTexture(TArray<FAssetData> AssetsData) {
+	for (auto asset : AssetsData) {
+		auto info = GetTexture2DInfo(asset);
+
+		if (info) {
+			SPAST_Print(FString::FromInt(info->Resolution));
+			SPAST_Print(info->iSRGB ? "sRGB" : "No sRGB");
+			SPAST_Print(* AssetSTD::mCompressionSettings2FSrting.Find(info->CompressionSettings));
+		}
+	}
+};
 
 /**
 * @brief Duplicate a series assets. Overwrite is not recommended for material type assets.
@@ -100,20 +114,18 @@ void USPAST_BatchEditorAssetsTool::CheckAssetClass(FAssetData AssetData) {
 	std::string AssetPrefixCheck = CHECK_RESULT_3State(CheckSTDPrefix(AssetData),"-","V","X");
 
 	// output log
-	SPAST_PrintLog_OUTPUTLOG(TABLESTRING_2Column(TablePattern_2Column_Content, "Asset Name", AssetNameResult).c_str() ,AssetSTD::SPAST_MSG_Tips);
-	SPAST_PrintLog_OUTPUTLOG(TABLESTRING_2Column(TablePattern_2Column_Content, "Asset Class", AssetClassResult).c_str(), AssetSTD::SPAST_MSG_Tips);
-	SPAST_PrintLog_OUTPUTLOG(TABLESTRING_2Column(TablePattern_2Column_Content, "Asset Prefix Check",AssetPrefixCheck).c_str(), AssetSTD::SPAST_MSG_Tips);
+	SPAST_PrintLog_OUTPUTLOG(TABLESTRING_2Column(TablePattern_2Column_Content, "Asset Name", AssetNameResult).c_str() ,MsgSTD::SPAST_MSG_Tips);
+	SPAST_PrintLog_OUTPUTLOG(TABLESTRING_2Column(TablePattern_2Column_Content, "Asset Class", AssetClassResult).c_str(), MsgSTD::SPAST_MSG_Tips);
+	SPAST_PrintLog_OUTPUTLOG(TABLESTRING_2Column(TablePattern_2Column_Content, "Asset Prefix Check",AssetPrefixCheck).c_str(), MsgSTD::SPAST_MSG_Tips);
 
 	// output screen
-	SPAST_PrintLog_SCREEN(std::format("|{:^3}|{:^25}|{:^25}|",AssetPrefixCheck,AssetClassResult,AssetNameResult).c_str(), AssetSTD::SPAST_MSG_Tips);
+	SPAST_PrintLog_SCREEN(std::format("|{:^3}|{:^25}|{:^25}|",AssetPrefixCheck,AssetClassResult,AssetNameResult).c_str(), MsgSTD::SPAST_MSG_Tips);
 }
-
 
  const FString USPAST_BatchEditorAssetsTool::GetPrefix(FAssetData& AssetData) {
 	FString assetname = AssetData.AssetName.ToString();
 
 	std::string assetname_str = TCHAR_TO_UTF8(*assetname);
-	int assetname_len = assetname_str.length();
 
 	bool prefix_found = false;
 	std::string prefix;
@@ -131,12 +143,10 @@ void USPAST_BatchEditorAssetsTool::CheckAssetClass(FAssetData AssetData) {
 	return prefix_found ? prefix.c_str(): NULL_FSTRING;
 }
 
-
 const FString USPAST_BatchEditorAssetsTool::GetSTDPrefix(FAssetData& AssetData) {
-	auto STD_Prefix = AssetSTD::EditorPrefix.Find(AssetData.GetClass());
+	auto STD_Prefix = AssetSTD::mAssetPrefix.Find(AssetData.GetClass());
 	return STD_Prefix ? * STD_Prefix : NULL_FSTRING;
 }
-
 
 int USPAST_BatchEditorAssetsTool::CheckSTDPrefix(FAssetData& AssetData) {
 	
@@ -157,10 +167,70 @@ int USPAST_BatchEditorAssetsTool::CheckSTDPrefix(FAssetData& AssetData) {
 
 }
 
-
 void USPAST_BatchEditorAssetsTool::FixSTDPrefix(FAssetData& AssetData) {
 
 }
+
+const FString USPAST_BatchEditorAssetsTool::GetSubfix(FAssetData& AssetData) {
+	FString assetname = AssetData.AssetName.ToString();
+
+	std::string assetname_str = TCHAR_TO_UTF8(*assetname);
+	char * assetname_ptr = TCHAR_TO_UTF8(*assetname);
+	int assetname_len = assetname_str.length();
+
+	bool subfix_found = false;
+	std::string subfix;
+
+	const char* split = "_";
+
+	for (int index = 0; index < assetname_len; index++) {
+		char * checkptr = assetname_ptr + assetname_len - 1 - index;
+		if (*checkptr == *split) {
+			subfix_found = true;
+			subfix = assetname_str.substr(assetname_len - (index+1));
+			break;
+		}
+	}
+
+	return subfix_found ? subfix.c_str() : NULL_FSTRING;
+
+};
+
+const AssetSTD::sTextureStandardInfo * USPAST_BatchEditorAssetsTool::GetStandardTextureInfo(FString& subfix, AssetSTD::eTextureCategory texturestandard)
+{
+	return AssetSTD::mTextureSubfix.Find(texturestandard)->Find(subfix);
+};
+
+const AssetSTD::sTextureStandardInfo * USPAST_BatchEditorAssetsTool::GetTexture2DInfo(FAssetData assetdata)
+{
+	if (!assetdata.IsInstanceOf(UTexture2D::StaticClass()))
+		return nullptr;
+
+	AssetSTD::sTextureStandardInfo * result = new AssetSTD::sTextureStandardInfo;
+	
+	UTexture2D* assetObj = (UTexture2D*)UEditorAssetLibrary::LoadAsset(assetdata.GetObjectPathString());
+
+	result->CompressionSettings = assetObj->CompressionSettings;
+	result->Resolution = std::max(assetObj->GetImportedSize().X, assetObj->GetImportedSize().Y);
+	result->iSRGB = assetObj->SRGB;
+
+	return result;
+};
+
+AssetSTD::eTextureCategory * USPAST_BatchEditorAssetsTool::GetTextureCategoty(FAssetData assetData)
+{
+	AssetSTD::eTextureCategory * result = new AssetSTD::eTextureCategory;
+
+	if (assetData.IsInstanceOf(UTexture::StaticClass()))
+		return nullptr;
+
+	if (USPAST_Extend::NameContains(assetData.AssetName, "_Hair"))
+		*result = AssetSTD::Hair;
+	else
+		*result = AssetSTD::Base;
+
+	return result;
+};
 
 /**
 * @brief Return asset name, asset package name(directory path), asset full path

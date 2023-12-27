@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace AssetSTD {
+namespace MsgSTD {
 
 	enum MessageTarget {
 		SCREEN,

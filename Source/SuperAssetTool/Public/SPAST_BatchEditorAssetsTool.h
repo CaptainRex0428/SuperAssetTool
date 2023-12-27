@@ -10,7 +10,10 @@
 
 #include "AssetStandard.h"
 #include "MessageStandard.h"
+#include "DebugMessage.h"
 #include "SPAST_Math.h"
+
+#include "SPAST_Extend.h"
 
 #include <string>
 #include <regex>
@@ -59,6 +62,9 @@ public:
 	UFUNCTION(CallInEditor, Category = "SPAST_Check")
 	void cClass();
 
+	UFUNCTION(CallInEditor, Category = "SPAST_Check")
+	void cTexture();
+
 	/**
 	* @note ----> CallInEditor
 	*/
@@ -77,6 +83,9 @@ public:
 	// check assets class
 	UFUNCTION(BlueprintCallable, Category = "SPAST_Check")
 	void SPAST_CheckAssetsClass(TArray<FAssetData> AssetsData);
+
+	UFUNCTION(BlueprintCallable, Category = "SPAST_Check")
+	void SPAST_CheckAssetsTexture(TArray<FAssetData> AssetsData);
 
 	// duplicate assets
 	UFUNCTION(BlueprintCallable, Category = "SPAST_Modify")
@@ -97,6 +106,13 @@ private:
 	int CheckSTDPrefix(FAssetData & AssetData);
 	void FixSTDPrefix(FAssetData & AssetData);
 
+	//subfix
+	const FString GetSubfix(FAssetData& AssetData);
+	
+	const AssetSTD::sTextureStandardInfo * GetStandardTextureInfo(FString& subfix, AssetSTD::eTextureCategory texturestandard);
+	const AssetSTD::sTextureStandardInfo * GetTexture2DInfo(FAssetData assetData);
+	AssetSTD::eTextureCategory * GetTextureCategoty(FAssetData assetData);
+
 	// Paths
 	std::tuple<FString, FString, FString> GetAssetPathInfo(FAssetData AssetData);
 
@@ -105,7 +121,5 @@ private:
 
 	// Subfix
 	int MaxNumSubfix(FString DirectoryPath, FString AssetName);
-
-
 
 };
