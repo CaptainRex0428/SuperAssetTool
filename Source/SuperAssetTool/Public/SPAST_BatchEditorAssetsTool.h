@@ -6,6 +6,8 @@
 #include "EditorAssetLibrary.h"
 #include "EditorActorFolders.h"
 
+#include "MaterialEditingLibrary.h"
+
 #include "PhysicsEngine/PhysicsAsset.h"
 
 #include "AssetStandard.h"

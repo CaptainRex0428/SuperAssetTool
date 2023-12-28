@@ -4,13 +4,18 @@
 // ------------------------------(Call In Editor)------------------------------//
 
 void USPAST_BatchEditorAssetsTool::dbTool() {
-	AssetSTD::sTextureInfoManaged newInfo = { 2048,TC_VectorDisplacementmap,false,TEXTUREGROUP_WorldNormalMap };
+	
+	FString TXPath = "/Game/StarterContent/Textures/T_Brick_Clay_New_D.T_Brick_Clay_New_D";
 
-	for (auto a : UEditorUtilityLibrary::GetSelectedAssetData()) {
-		if (a.IsInstanceOf(UTexture2D::StaticClass())) {
-			setTexture2DInfo((UTexture2D*)UEditorAssetLibrary::LoadAsset(a.GetObjectPathString()),newInfo);
-		}
+	UTexture* textureasset = (UTexture*)UEditorAssetLibrary::LoadAsset(TXPath);
+
+	for (auto asset : UEditorUtilityLibrary::GetSelectedAssetsOfClass(UMaterialInstance::StaticClass())) {		
+		UMaterialInstanceConstant* instance = (UMaterialInstanceConstant*)asset;
+		instance->SetTextureParameterValueEditorOnly(FMaterialParameterInfo("TextureE", GlobalParameter), textureasset);
+
+		UMaterialEditingLibrary::ClearAllMaterialInstanceParameters(instance);
 	}
+	
 }
 
 void USPAST_BatchEditorAssetsTool::cClass() {

@@ -40,8 +40,9 @@ public class SuperAssetTool : ModuleRules
 				"SlateCore",
                 "EditorScriptingUtilities",
 				"Blutility",
-				"UMGEditor"
-			}
+				"UMGEditor",
+                "MaterialEditor"
+            }
 			);
 		
 		
