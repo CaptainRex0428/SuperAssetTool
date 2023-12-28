@@ -3,25 +3,25 @@
 
 namespace MsgSTD {
 
-	enum MessageTarget {
+	enum eMessageTarget {
 		SCREEN,
 		OUTPUTLOG,
 		DIALOG
 	};
 
-	enum MessageLevel {
+	enum eMessageLevel {
 		SPAST_MSG_Error,
 		SPAST_MSG_Warning,
 		SPAST_MSG_Tips
 	};
 
-	TMap<MessageLevel,FColor> MessageColor{
+	TMap<eMessageLevel,FColor> mMessageColor{
 		{SPAST_MSG_Error,FColor::Red},
 		{SPAST_MSG_Warning,FColor::Yellow},
 		{SPAST_MSG_Tips,FColor::Cyan}
 	};
 
-	TMap<MessageLevel,FString> MessageLevelToString{
+	TMap<eMessageLevel,FString> mMessageLevelToString{
 		{SPAST_MSG_Error,"Error"},
 		{SPAST_MSG_Warning,"Warning"},
 		{SPAST_MSG_Tips,"Tips"}

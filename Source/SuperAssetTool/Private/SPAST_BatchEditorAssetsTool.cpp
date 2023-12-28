@@ -3,7 +3,14 @@
 // ------------------------------Public Functions------------------------------//
 // ------------------------------(Call In Editor)------------------------------//
 
-void USPAST_BatchEditorAssetsTool::dbTool() {	
+void USPAST_BatchEditorAssetsTool::dbTool() {
+	AssetSTD::sTextureInfoManaged newInfo = { 2048,TC_VectorDisplacementmap,false,TEXTUREGROUP_WorldNormalMap };
+
+	for (auto a : UEditorUtilityLibrary::GetSelectedAssetData()) {
+		if (a.IsInstanceOf(UTexture2D::StaticClass())) {
+			setTexture2DInfo((UTexture2D*)UEditorAssetLibrary::LoadAsset(a.GetObjectPathString()),newInfo);
+		}
+	}
 }
 
 void USPAST_BatchEditorAssetsTool::cClass() {
@@ -197,17 +204,38 @@ const FString USPAST_BatchEditorAssetsTool::GetSubfix(FAssetData& AssetData) {
 
 };
 
-const AssetSTD::sTextureStandardInfo * USPAST_BatchEditorAssetsTool::GetStandardTextureInfo(FString& subfix, AssetSTD::eTextureCategory texturestandard)
+const AssetSTD::sTextureInfoManaged * USPAST_BatchEditorAssetsTool::GetSTDTextureInfo(FString& subfix, TMap<FString, AssetSTD::sTextureInfoManaged>& textureSTDCategory)
 {
-	return AssetSTD::mTextureSubfix.Find(texturestandard)->Find(subfix);
+	return textureSTDCategory.Find(subfix);
 };
 
-const AssetSTD::sTextureStandardInfo * USPAST_BatchEditorAssetsTool::GetTexture2DInfo(FAssetData assetdata)
+TMap<FString, AssetSTD::sTextureInfoManaged>* USPAST_BatchEditorAssetsTool::GetSTDTextureCategoty(FAssetData assetData, AssetSTD::AssetCategory AssetCategory)
+{
+	if (!assetData.IsInstanceOf(UTexture2D::StaticClass())) {
+		return nullptr;
+	}
+
+	if (AssetCategory == AssetSTD::Character) {
+		if (assetData.AssetName.ToString().Contains("_Hair"))
+			return AssetSTD::mTextureSubfix_Char.Find(AssetSTD::Hair);
+		else
+			return AssetSTD::mTextureSubfix_Char.Find(AssetSTD::Base);
+	}
+	else if (AssetCategory == AssetSTD::Effect)
+	{
+		return & AssetSTD::mTextureSubfix_Effects_Base;
+	}
+	else {
+		return &AssetSTD::mTextureSubfix_World_Base;
+	}
+};
+
+const AssetSTD::sTextureInfoManaged * USPAST_BatchEditorAssetsTool::GetTexture2DInfo(FAssetData assetdata)
 {
 	if (!assetdata.IsInstanceOf(UTexture2D::StaticClass()))
 		return nullptr;
 
-	AssetSTD::sTextureStandardInfo * result = new AssetSTD::sTextureStandardInfo;
+	AssetSTD::sTextureInfoManaged * result = new AssetSTD::sTextureInfoManaged;
 	
 	UTexture2D* assetObj = (UTexture2D*)UEditorAssetLibrary::LoadAsset(assetdata.GetObjectPathString());
 	
@@ -219,20 +247,14 @@ const AssetSTD::sTextureStandardInfo * USPAST_BatchEditorAssetsTool::GetTexture2
 	return result;
 };
 
-AssetSTD::eTextureCategory * USPAST_BatchEditorAssetsTool::GetTextureCategoty(FAssetData assetData)
-{
-	AssetSTD::eTextureCategory * result = new AssetSTD::eTextureCategory;
+FAssetData USPAST_BatchEditorAssetsTool::setTexture2DInfo(UTexture2D* TextureObject, AssetSTD::sTextureInfoManaged textureInfo) {
+	TextureObject->CompressionSettings = textureInfo.CompressionSettings;
+	TextureObject->SRGB = textureInfo.iSRGB;
+	TextureObject->LODGroup = textureInfo.TxGroup;
 
-	if (assetData.IsInstanceOf(UTexture::StaticClass()))
-		return nullptr;
-
-	if (USPAST_Extend::NameContains(assetData.AssetName, "_Hair"))
-		*result = AssetSTD::Hair;
-	else
-		*result = AssetSTD::Base;
-
-	return result;
+	return TextureObject;
 };
+
 
 /**
 * @brief Return asset name, asset package name(directory path), asset full path

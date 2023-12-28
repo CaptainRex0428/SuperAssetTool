@@ -31,7 +31,14 @@ namespace AssetSTD {
 		{UPhysicsAsset::StaticClass(),"PHYS_"}
 	};
 
-	struct sTextureStandardInfo {
+	enum AssetCategory
+	{
+		World,
+		Character,
+		Effect
+	};
+
+	struct sTextureInfoManaged {
 		int Resolution;
 		TextureCompressionSettings CompressionSettings;
 		bool iSRGB;
@@ -59,19 +66,37 @@ namespace AssetSTD {
 		{TC_MAX,"MAX"}
 	};
 
-	TMap<FString, sTextureStandardInfo> mTextureSubfix_Base{
-		{"_D",{2048,TC_Default,true}},
-		{"_E",{512,TC_Default,true}},
-		{"_N",{1024,TC_Normalmap,false}},
-		{"_ARMS",{512,TC_Masks,false}},
-		{"_Detail",{512,TC_VectorDisplacementmap,false}},
-		{"_Attr",{512,TC_VectorDisplacementmap,false}}
+	TMap<FString, sTextureInfoManaged> mTextureSubfix_World_Base{
+		{"_D",{2048,TC_Default,true,TEXTUREGROUP_World}},
+		{"_E",{512,TC_Default,true,TEXTUREGROUP_World}},
+		{"_N",{1024,TC_Normalmap,false,TEXTUREGROUP_WorldNormalMap}},
+		{"_ARMS",{512,TC_Masks,false,TEXTUREGROUP_World}},
+		{"_Detail",{512,TC_VectorDisplacementmap,false,TEXTUREGROUP_World}},
+		{"_Attr",{512,TC_VectorDisplacementmap,false,TEXTUREGROUP_World}}
 	};
 
-	TMap<FString, sTextureStandardInfo> mTextureSubfix_Hair{
-		{"_Attr",{2048,TC_VectorDisplacementmap,true}},
-		{"_AO",{2048,TC_Grayscale,true}},
-		{"_SDyeM",{512,TC_Grayscale,true}}
+	TMap<FString, sTextureInfoManaged> mTextureSubfix_Effects_Base{
+		{"_D",{512,TC_Default,true,TEXTUREGROUP_Effects}},
+		{"_E",{512,TC_Default,true,TEXTUREGROUP_Effects}},
+		{"_N",{512,TC_Normalmap,false,TEXTUREGROUP_Effects}},
+		{"_ARMS",{256,TC_Masks,false,TEXTUREGROUP_Effects}},
+		{"_Detail",{256,TC_VectorDisplacementmap,false,TEXTUREGROUP_Effects}},
+		{"_Attr",{256,TC_VectorDisplacementmap,false,TEXTUREGROUP_Effects}}
+	};
+
+	TMap<FString, sTextureInfoManaged> mTextureSubfix_Char_Base{
+		{"_D",{2048,TC_Default,true,TEXTUREGROUP_Character}},
+		{"_E",{512,TC_Default,true,TEXTUREGROUP_Character}},
+		{"_N",{1024,TC_Normalmap,false,TEXTUREGROUP_CharacterNormalMap}},
+		{"_ARMS",{512,TC_Masks,false,TEXTUREGROUP_Character}},
+		{"_Detail",{512,TC_VectorDisplacementmap,false,TEXTUREGROUP_Character}},
+		{"_Attr",{512,TC_VectorDisplacementmap,false,TEXTUREGROUP_Character}}
+	};
+
+	TMap<FString, sTextureInfoManaged> mTextureSubfix_Char_Hair{
+		{"_Attr",{2048,TC_VectorDisplacementmap,true,TEXTUREGROUP_Character}},
+		{"_AO",{2048,TC_Grayscale,true,TEXTUREGROUP_Character}},
+		{"_SDyeM",{512,TC_Grayscale,true,TEXTUREGROUP_Character}}
 	};
 
 	enum eTextureCategory {
@@ -79,8 +104,8 @@ namespace AssetSTD {
 		Hair
 	};
 
-	TMap<eTextureCategory, TMap<FString, sTextureStandardInfo>> mTextureSubfix{
-		{Base,mTextureSubfix_Base},
-		{Hair,mTextureSubfix_Hair}
+	TMap<eTextureCategory, TMap<FString, sTextureInfoManaged>> mTextureSubfix_Char{
+		{Base,mTextureSubfix_Char_Base},
+		{Hair,mTextureSubfix_Char_Hair}
 	};
 }

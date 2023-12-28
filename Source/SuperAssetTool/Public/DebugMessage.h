@@ -29,11 +29,11 @@
 #define MSGTARGET_OUTPUTLOG_DIALOG {MsgSTD::DIALOG,MsgSTD::OUTPUTLOG}
 #define MSGTARGET_SCREEN_OUTPUTLOG_DIALOG {MsgSTD::SCREEN,MsgSTD::DIALOG,MsgSTD::OUTPUTLOG}
 
-void SPAST_PrintLog_SCREEN(const FString& Message, MsgSTD::MessageLevel Type) {
-	GEngine->AddOnScreenDebugMessage(-1, 5, *(MsgSTD::MessageColor.Find(Type)), Message);
+void SPAST_PrintLog_SCREEN(const FString& Message, MsgSTD::eMessageLevel Type) {
+	GEngine->AddOnScreenDebugMessage(-1, 5, *(MsgSTD::mMessageColor.Find(Type)), Message);
 }
 
-void SPAST_PrintLog_OUTPUTLOG(const FString& Message, MsgSTD::MessageLevel Type) {
+void SPAST_PrintLog_OUTPUTLOG(const FString& Message, MsgSTD::eMessageLevel Type) {
 	if(Type == MsgSTD::SPAST_MSG_Error)
 		UE_LOG(LogTemp, Error, TEXT("%s"), *Message)
 	else if (Type == MsgSTD::SPAST_MSG_Warning)
@@ -43,8 +43,8 @@ void SPAST_PrintLog_OUTPUTLOG(const FString& Message, MsgSTD::MessageLevel Type)
 }
 
 void SPAST_Print(const FString& Message,
-	TArray<MsgSTD::MessageTarget> Target = MSGTARGET_SCREEN_OUTPUTLOG,
-	MsgSTD::MessageLevel Type = MsgSTD::SPAST_MSG_Tips,
+	TArray<MsgSTD::eMessageTarget> Target = MSGTARGET_SCREEN_OUTPUTLOG,
+	MsgSTD::eMessageLevel Type = MsgSTD::SPAST_MSG_Tips,
 	const FString& Title = "Message",
 	EAppMsgType::Type ButtonType = EAppMsgType::Ok,
 	EAppReturnType::Type * DialogReturn = nullptr)
@@ -56,7 +56,7 @@ void SPAST_Print(const FString& Message,
 		SPAST_PrintLog_OUTPUTLOG(Message, Type);
 
 	if (Target.Contains(MsgSTD::DIALOG)) {
-		FString TitleResult = FString::Format(TEXT("[{0}]{1}"), { *MsgSTD::MessageLevelToString.Find(Type), Title});
+		FString TitleResult = FString::Format(TEXT("[{0}]{1}"), { *MsgSTD::mMessageLevelToString.Find(Type), Title});
 		auto DialogResult = FMessageDialog::Open(ButtonType, FText::FromString(Message), FText::FromString(TitleResult));
 		if (DialogReturn) {
 			* DialogReturn = DialogResult;

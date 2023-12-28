@@ -13,10 +13,7 @@
 #include "DebugMessage.h"
 #include "SPAST_Math.h"
 
-#include "SPAST_Extend.h"
-
 #include <string>
-#include <regex>
 #include <tuple>
 
 #define NULL_FSTRING ""
@@ -109,9 +106,12 @@ private:
 	//subfix
 	const FString GetSubfix(FAssetData& AssetData);
 	
-	const AssetSTD::sTextureStandardInfo * GetStandardTextureInfo(FString& subfix, AssetSTD::eTextureCategory texturestandard);
-	const AssetSTD::sTextureStandardInfo * GetTexture2DInfo(FAssetData assetData);
-	AssetSTD::eTextureCategory * GetTextureCategoty(FAssetData assetData);
+	const AssetSTD::sTextureInfoManaged * GetSTDTextureInfo(FString& subfix, TMap<FString, AssetSTD::sTextureInfoManaged> & textureSTDCategory);
+	TMap<FString, AssetSTD::sTextureInfoManaged> * GetSTDTextureCategoty(FAssetData assetData, AssetSTD::AssetCategory AssetCategory);
+
+	const AssetSTD::sTextureInfoManaged* GetTexture2DInfo(FAssetData assetData);
+
+	FAssetData setTexture2DInfo(UTexture2D * TextureObject,AssetSTD::sTextureInfoManaged textureInfo);
 
 	// Paths
 	std::tuple<FString, FString, FString> GetAssetPathInfo(FAssetData AssetData);

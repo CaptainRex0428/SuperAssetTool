@@ -5,14 +5,14 @@
 #include <format>
 
 
-struct Result_String2Int {
+struct sResult_String2Int {
 	bool success;
 	int num;
 };
 
-Result_String2Int String2Int(std::string str) {
+sResult_String2Int String2Int(std::string str) {
 
-	Result_String2Int result;
+	sResult_String2Int result;
 
 	try
 	{
