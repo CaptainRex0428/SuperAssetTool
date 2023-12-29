@@ -53,7 +53,7 @@ public:
 	* @note ----> CallInEditor
 	*/
 	UFUNCTION(CallInEditor, Category = "SPAST_Debug")
-	void dbTool();
+	void dbTool(FName paramterName);
 
 	/**
 	* @note ----> CallInEditor
@@ -107,13 +107,7 @@ private:
 
 	//subfix
 	const FString GetSubfix(FAssetData& AssetData);
-	
-	const AssetSTD::sTextureInfoManaged * GetSTDTextureInfo(FString& subfix, TMap<FString, AssetSTD::sTextureInfoManaged> & textureSTDCategory);
-	TMap<FString, AssetSTD::sTextureInfoManaged> * GetSTDTextureCategoty(FAssetData assetData, AssetSTD::AssetCategory AssetCategory);
-
-	const AssetSTD::sTextureInfoManaged* GetTexture2DInfo(FAssetData assetData);
-
-	FAssetData setTexture2DInfo(UTexture2D * TextureObject,AssetSTD::sTextureInfoManaged textureInfo);
+	int MaxNumSubfix(FString DirectoryPath, FString AssetName);
 
 	// Paths
 	std::tuple<FString, FString, FString> GetAssetPathInfo(FAssetData AssetData);
@@ -121,7 +115,34 @@ private:
 	//duplicate
 	TArray<FAssetData> DuplicateAsset(FString DestinationDirectory, FString SourceAssetPath, int DuplicateNum, bool overwrite);
 
-	// Subfix
-	int MaxNumSubfix(FString DirectoryPath, FString AssetName);
 
+	// Texture
+	const AssetSTD::sTextureInfoManaged* GetSTDTextureInfo(FString& subfix, TMap<FString, AssetSTD::sTextureInfoManaged>& textureSTDCategory);
+	TMap<FString, AssetSTD::sTextureInfoManaged>* GetSTDTextureCategoty(FAssetData assetData, AssetSTD::AssetCategory AssetCategory);
+
+	const AssetSTD::sTextureInfoManaged* GetTexture2DInfo(FAssetData assetData);
+
+	FAssetData setTexture2DInfo(UTexture2D* TextureObject, AssetSTD::sTextureInfoManaged textureInfo);
+
+	//Material Instance
+
+	TArray<struct FTextureParameterValue>& EnableMarerialInstanceEditorOnlyTextureParameter(UMaterialInstance* instance, FName paramterName);
+	TArray<struct FTextureParameterValue>& EnableMarerialInstanceEditorOnlyTextureParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
+	TArray<struct FTextureParameterValue>& DisableMarerialInstanceEditorOnlyTextureParameter(UMaterialInstance* instance, FName paramterName);
+	TArray<struct FTextureParameterValue>& DisableMarerialInstanceEditorOnlyTextureParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
+	void ClearMarerialInstanceAllEditorOnlyTextureParameters(UMaterialInstance* instance);
+
+	TArray<struct FScalarParameterValue>& EnableMarerialInstanceEditorOnlyScalarParameter(UMaterialInstance* instance, FName paramterName);
+	TArray<struct FScalarParameterValue>& EnableMarerialInstanceEditorOnlyScalarParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
+	TArray<struct FScalarParameterValue>& DisableMarerialInstanceEditorOnlyScalarParameter(UMaterialInstance* instance, FName paramterName);
+	TArray<struct FScalarParameterValue>& DisableMarerialInstanceEditorOnlyScalarParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
+	void ClearMarerialInstanceAllEditorOnlyScalarParameters(UMaterialInstance* instance);
+
+	TArray<struct FVectorParameterValue>& EnableMarerialInstanceEditorOnlyVectorParameter(UMaterialInstance* instance, FName paramterName);
+	TArray<struct FVectorParameterValue>& EnableMarerialInstanceEditorOnlyVectorParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
+	TArray<struct FVectorParameterValue>& DisableMarerialInstanceEditorOnlyVectorParameter(UMaterialInstance* instance, FName paramterName);
+	TArray<struct FVectorParameterValue>& DisableMarerialInstanceEditorOnlyVectorParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
+	void ClearMarerialInstanceAllEditorOnlyVectorParameters(UMaterialInstance* instance);
+
+	TMap<FMaterialParameterInfo, FMaterialParameterMetadata>& EnableMaterialInstanceEidtorOnlyParamter(UMaterialInstance* instance, FName parameterName, EMaterialParameterType parameterType);
 };

@@ -3,17 +3,11 @@
 // ------------------------------Public Functions------------------------------//
 // ------------------------------(Call In Editor)------------------------------//
 
-void USPAST_BatchEditorAssetsTool::dbTool() {
-	
-	FString TXPath = "/Game/StarterContent/Textures/T_Brick_Clay_New_D.T_Brick_Clay_New_D";
+void USPAST_BatchEditorAssetsTool::dbTool(FName paramterName) {
 
-	UTexture* textureasset = (UTexture*)UEditorAssetLibrary::LoadAsset(TXPath);
-
-	for (auto asset : UEditorUtilityLibrary::GetSelectedAssetsOfClass(UMaterialInstance::StaticClass())) {		
-		UMaterialInstanceConstant* instance = (UMaterialInstanceConstant*)asset;
-		instance->SetTextureParameterValueEditorOnly(FMaterialParameterInfo("TextureE", GlobalParameter), textureasset);
-
-		UMaterialEditingLibrary::ClearAllMaterialInstanceParameters(instance);
+	for (auto asset : UEditorUtilityLibrary::GetSelectedAssetsOfClass(UMaterialInstance::StaticClass())) {
+		UMaterialInstance* instance = (UMaterialInstance*)asset;
+		EnableMaterialInstanceEidtorOnlyParamter(instance, paramterName, EMaterialParameterType::StaticSwitch);
 	}
 	
 }
@@ -346,4 +340,272 @@ int USPAST_BatchEditorAssetsTool::MaxNumSubfix(FString DirectoryPath, FString As
 	}
 
 	return maxSubfix;
+};
+
+TArray<struct FTextureParameterValue> & USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyTextureParameter(UMaterialInstance* instance, FName paramterName) {
+	TArray< FMaterialParameterInfo > OutParameterInfo;
+	TArray< FGuid > OutParameterGUID;
+	instance->GetAllTextureParameterInfo(OutParameterInfo, OutParameterGUID);
+
+	for (FTextureParameterValue value: instance->TextureParameterValues) {
+		if (value.ParameterInfo.Name == paramterName) {
+			return instance->TextureParameterValues;
+		}
+	}
+
+	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
+		if (parameterInfo.Name == paramterName) {
+			
+			UTexture* textureObj;
+			instance->GetTextureParameterDefaultValue(parameterInfo, textureObj);
+
+			FTextureParameterValue txv = (FTextureParameterValue)parameterInfo;
+			txv.ParameterValue = textureObj;
+
+			instance->TextureParameterValues.Emplace(txv);
+		}
+	}
+
+	return instance->TextureParameterValues;
+};
+
+TArray<struct FTextureParameterValue> & USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyTextureParameters(UMaterialInstance* instance, TArray<FName> paramterNames) {
+	TArray< FMaterialParameterInfo > OutParameterInfo;
+	TArray< FGuid > OutParameterGUID;
+	instance->GetAllTextureParameterInfo(OutParameterInfo, OutParameterGUID);
+
+	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
+
+		if ( paramterNames.Contains(parameterInfo.Name)) {
+
+			bool bUnEnabled = false;
+
+			for (FTextureParameterValue value : instance->TextureParameterValues) {
+				
+				if (value.ParameterInfo.Name == parameterInfo.Name) {
+					bUnEnabled = true;
+				}
+			}
+
+			if (bUnEnabled) {
+				UTexture* texDefault;
+				instance->GetTextureParameterDefaultValue(parameterInfo, texDefault);
+
+				FTextureParameterValue txv = (FTextureParameterValue)parameterInfo;
+				txv.ParameterValue = texDefault;
+
+				instance->TextureParameterValues.Emplace(txv);
+			}
+			
+			
+		}
+	}
+
+	return instance->TextureParameterValues;
+};
+
+TArray<struct FTextureParameterValue> & USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyTextureParameter(UMaterialInstance* instance, FName paramterName) {
+	for (auto TextureInfo : instance->TextureParameterValues) {
+		if (TextureInfo.ParameterInfo.Name == paramterName) {
+			instance->TextureParameterValues.Remove(TextureInfo);
+		}
+	}
+
+	return instance->TextureParameterValues;
+}
+
+TArray<struct FTextureParameterValue>& USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyTextureParameters(UMaterialInstance* instance, TArray<FName> paramterNames) {
+	for (auto TextureInfo : instance->TextureParameterValues) {
+		if (paramterNames.Contains(TextureInfo.ParameterInfo.Name)) {
+			instance->TextureParameterValues.Remove(TextureInfo);
+		}
+	}
+
+	return instance->TextureParameterValues;
+}
+
+void USPAST_BatchEditorAssetsTool::ClearMarerialInstanceAllEditorOnlyTextureParameters(UMaterialInstance* instance) {
+	instance->TextureParameterValues.Empty();
+};
+
+
+TArray<struct FScalarParameterValue>& USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyScalarParameter(UMaterialInstance* instance, FName paramterName) {
+	TArray< FMaterialParameterInfo > OutParameterInfo;
+	TArray< FGuid > OutParameterGUID;
+	instance->GetAllScalarParameterInfo(OutParameterInfo, OutParameterGUID);
+
+	for (FScalarParameterValue value : instance->ScalarParameterValues) {
+		if (value.ParameterInfo.Name == paramterName) {
+			return instance->ScalarParameterValues;
+		}
+	}
+
+	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
+		if (parameterInfo.Name == paramterName) {
+			float scalarDefault;
+			instance->GetScalarParameterDefaultValue(parameterInfo, scalarDefault);
+
+			FScalarParameterValue sv = (FScalarParameterValue)parameterInfo;
+			sv.ParameterValue = scalarDefault;
+
+			instance->ScalarParameterValues.Emplace(sv);
+		}
+	}
+
+	return instance->ScalarParameterValues;
+};
+
+TArray<struct FScalarParameterValue>& USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyScalarParameters(UMaterialInstance* instance, TArray<FName> paramterNames) {
+	TArray< FMaterialParameterInfo > OutParameterInfo;
+	TArray< FGuid > OutParameterGUID;
+	instance->GetAllScalarParameterInfo(OutParameterInfo, OutParameterGUID);
+
+	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
+		if (paramterNames.Contains(parameterInfo.Name)) {
+
+			bool bUnEnabled = false;
+
+			for (FScalarParameterValue value : instance->ScalarParameterValues) {
+
+				if (value.ParameterInfo.Name == parameterInfo.Name) {
+					bUnEnabled = true;
+				}
+			}
+
+			if (bUnEnabled) {
+				float scalarDefault;
+				instance->GetScalarParameterDefaultValue(parameterInfo, scalarDefault);
+
+				FScalarParameterValue sv = (FScalarParameterValue)parameterInfo;
+				sv.ParameterValue = scalarDefault;
+
+				instance->ScalarParameterValues.Emplace(sv);
+			}
+		}
+	}
+
+	return instance->ScalarParameterValues;
+};
+
+TArray<struct FScalarParameterValue>& USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyScalarParameter(UMaterialInstance* instance, FName paramterName) {
+	for (auto ScalarInfo : instance->ScalarParameterValues) {
+		if (ScalarInfo.ParameterInfo.Name == paramterName) {
+			instance->ScalarParameterValues.Remove(ScalarInfo);
+		}
+	}
+
+	return instance->ScalarParameterValues;
+};
+
+TArray<struct FScalarParameterValue>& USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyScalarParameters(UMaterialInstance* instance, TArray<FName> paramterNames) {
+	for (auto ScalarInfo : instance->ScalarParameterValues) {
+		if (paramterNames.Contains(ScalarInfo.ParameterInfo.Name)) {
+			instance->ScalarParameterValues.Remove(ScalarInfo);
+		}
+	}
+
+	return instance->ScalarParameterValues;
+};
+
+void USPAST_BatchEditorAssetsTool::ClearMarerialInstanceAllEditorOnlyScalarParameters(UMaterialInstance* instance) {
+	instance->ScalarParameterValues.Empty();
+};
+
+TArray<struct FVectorParameterValue>& USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyVectorParameter(UMaterialInstance* instance, FName paramterName){
+	TArray< FMaterialParameterInfo > OutParameterInfo;
+	TArray< FGuid > OutParameterGUID;
+	instance->GetAllVectorParameterInfo(OutParameterInfo, OutParameterGUID);
+
+	for (FVectorParameterValue value : instance->VectorParameterValues) {
+		if (value.ParameterInfo.Name == paramterName) {
+			return instance->VectorParameterValues;
+		}
+	}
+
+	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
+		if (parameterInfo.Name== paramterName) {
+			FLinearColor vectorDefault;
+			instance->GetVectorParameterDefaultValue(parameterInfo, vectorDefault);
+
+			FVectorParameterValue vv = (FVectorParameterValue)parameterInfo;
+			vv.ParameterValue = vectorDefault;
+
+			instance->VectorParameterValues.Emplace(vv);
+		}
+	}
+
+	return instance->VectorParameterValues;
+};
+
+TArray<struct FVectorParameterValue>& USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyVectorParameters(UMaterialInstance* instance, TArray<FName> paramterNames){
+	TArray< FMaterialParameterInfo > OutParameterInfo;
+	TArray< FGuid > OutParameterGUID;
+	instance->GetAllVectorParameterInfo(OutParameterInfo, OutParameterGUID);
+
+	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
+		if (paramterNames.Contains(parameterInfo.Name)) {
+
+			bool bUnEnabled = false;
+
+			for (FVectorParameterValue value : instance->VectorParameterValues) {
+
+				if (value.ParameterInfo.Name == parameterInfo.Name) {
+					bUnEnabled = true;
+				}
+			}
+
+			if (bUnEnabled) {
+				FLinearColor vectorDefault;
+				instance->GetVectorParameterDefaultValue(parameterInfo, vectorDefault);
+
+				FVectorParameterValue vv = (FVectorParameterValue)parameterInfo;
+				vv.ParameterValue = vectorDefault;
+
+				instance->VectorParameterValues.Emplace(vv);
+			}
+		}
+	}
+
+	return instance->VectorParameterValues;
+};
+
+TArray<struct FVectorParameterValue>& USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyVectorParameter(UMaterialInstance* instance, FName paramterName){
+	for (auto VectorInfo : instance->VectorParameterValues) {
+		if (VectorInfo.ParameterInfo.Name== paramterName) {
+			instance->VectorParameterValues.Remove(VectorInfo);
+		}
+	}
+
+	return instance->VectorParameterValues;
+};
+
+TArray<struct FVectorParameterValue>& USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyVectorParameters(UMaterialInstance* instance, TArray<FName> paramterNames){
+	for (auto VectorInfo : instance->VectorParameterValues) {
+		if (paramterNames.Contains(VectorInfo.ParameterInfo.Name)) {
+			instance->VectorParameterValues.Remove(VectorInfo);
+		}
+	}
+
+	return instance->VectorParameterValues;
+};
+
+void USPAST_BatchEditorAssetsTool::ClearMarerialInstanceAllEditorOnlyVectorParameters(UMaterialInstance* instance) {
+	instance->VectorParameterValues.Empty();
+};
+
+TMap<FMaterialParameterInfo, FMaterialParameterMetadata>& USPAST_BatchEditorAssetsTool::EnableMaterialInstanceEidtorOnlyParamter(UMaterialInstance* instance, FName parameterName, EMaterialParameterType parameterType) {
+		
+	TMap<FMaterialParameterInfo, FMaterialParameterMetadata> * OutParameterInfoMap = new TMap<FMaterialParameterInfo, FMaterialParameterMetadata>;
+	instance->GetAllParametersOfType(parameterType, *OutParameterInfoMap);
+
+	FMaterialInstanceParameterUpdateContext context(instance);
+
+	for (auto & parameter : *OutParameterInfoMap) {
+		if (parameter.Key.Name == parameterName) {
+			parameter.Value.bOverride = 1;
+			context.SetParameterValueEditorOnly(parameter.Key, parameter.Value);
+		}
+	}
+
+	return * OutParameterInfoMap;
 };
