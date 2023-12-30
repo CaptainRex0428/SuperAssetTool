@@ -41,7 +41,10 @@ public class SuperAssetTool : ModuleRules
                 "EditorScriptingUtilities",
 				"Blutility",
 				"UMGEditor",
-                "MaterialEditor"
+                "MaterialEditor",
+                "UnrealEd",
+                "ContentBrowser",
+                "AssetTools"
             }
 			);
 		

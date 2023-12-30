@@ -108,4 +108,15 @@ namespace AssetSTD {
 		{Base,mTextureSubfix_Char_Base},
 		{Hair,mTextureSubfix_Char_Hair}
 	};
+
+	TArray<EMaterialParameterType> FMaterialParameterType = {
+		EMaterialParameterType::Scalar,
+		EMaterialParameterType::Vector,
+		EMaterialParameterType::Texture,
+		EMaterialParameterType::DoubleVector,
+		EMaterialParameterType::RuntimeVirtualTexture,
+		EMaterialParameterType::StaticSwitch,
+		EMaterialParameterType::StaticComponentMask
+	};
+
 }

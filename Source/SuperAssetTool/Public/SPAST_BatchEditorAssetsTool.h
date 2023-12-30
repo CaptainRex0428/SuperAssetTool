@@ -6,7 +6,19 @@
 #include "EditorAssetLibrary.h"
 #include "EditorActorFolders.h"
 
+#include "ContentBrowserModule.h"
+#include "IContentBrowserSingleton.h"
+
+#include "AssetToolsModule.h"
+
 #include "MaterialEditingLibrary.h"
+#include "MaterialTypes.h"
+#include "MaterialEditor/MaterialEditorInstanceConstant.h"
+#include "MaterialEditor/DEditorParameterValue.h"
+
+#include "Factories/MaterialInstanceConstantFactoryNew.h"
+
+#include "Factories/MaterialFactoryNew.h"
 
 #include "PhysicsEngine/PhysicsAsset.h"
 
@@ -53,24 +65,30 @@ public:
 	* @note ----> CallInEditor
 	*/
 	UFUNCTION(CallInEditor, Category = "SPAST_Debug")
-	void dbTool(FName paramterName);
+	void dbTool();
 
 	/**
 	* @note ----> CallInEditor
 	*/
 	UFUNCTION(CallInEditor, Category = "SPAST_Check")
-	void cClass();
+	void AssetsClass();
 
 	UFUNCTION(CallInEditor, Category = "SPAST_Check")
-	void cTexture();
+	void TextureInfo();
 
 	/**
 	* @note ----> CallInEditor
 	*/
-	UFUNCTION(CallInEditor, Category = "SPAST_Modify")
-	void mdDuplicate(FString SubfolderName,
+	UFUNCTION(CallInEditor, Category = "SPAST_Assets")
+	void DuplicateNearby(FString SubfolderName,
 		bool UseSubfolder = false, bool OverwriteExists = false,
 		int DuplicateNum = 1);
+
+	UFUNCTION(CallInEditor, Category = "SPAST_Marerial")
+	void InstanceParamterSwitch(
+		FName ParamterName,
+		bool Enable
+	);
 
 
 // ------------------------------Public Functions------------------------------//
@@ -93,10 +111,19 @@ public:
 		bool UseSubfolder, bool OverwriteExists,
 		int DuplicateNum);
 
+	UFUNCTION(BlueprintCallable, Category = "SPAST_MarerialInstance")
+	void SPAST_MaterialInstanceParamterSwitch(
+		UMaterialInstanceConstant* Instance,
+		FName ParamterName,
+		bool Enable
+	);
+
 
 //------------------------------Private Functions------------------------------//
 
 private:
+	TArray<FString> GetViewportBrowserPath();
+
 	void CheckAssetClass(FAssetData AssetData);
 
 	// Prefix
@@ -116,7 +143,7 @@ private:
 	TArray<FAssetData> DuplicateAsset(FString DestinationDirectory, FString SourceAssetPath, int DuplicateNum, bool overwrite);
 
 
-	// Texture
+	// TextureInfo
 	const AssetSTD::sTextureInfoManaged* GetSTDTextureInfo(FString& subfix, TMap<FString, AssetSTD::sTextureInfoManaged>& textureSTDCategory);
 	TMap<FString, AssetSTD::sTextureInfoManaged>* GetSTDTextureCategoty(FAssetData assetData, AssetSTD::AssetCategory AssetCategory);
 
@@ -125,24 +152,20 @@ private:
 	FAssetData setTexture2DInfo(UTexture2D* TextureObject, AssetSTD::sTextureInfoManaged textureInfo);
 
 	//Material Instance
+	UMaterialInstanceConstant* CreateMaterialInstance(UMaterialInterface* ParentMaterial, const FString& InstanceName, FString InstancePath);
 
-	TArray<struct FTextureParameterValue>& EnableMarerialInstanceEditorOnlyTextureParameter(UMaterialInstance* instance, FName paramterName);
-	TArray<struct FTextureParameterValue>& EnableMarerialInstanceEditorOnlyTextureParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
-	TArray<struct FTextureParameterValue>& DisableMarerialInstanceEditorOnlyTextureParameter(UMaterialInstance* instance, FName paramterName);
-	TArray<struct FTextureParameterValue>& DisableMarerialInstanceEditorOnlyTextureParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
-	void ClearMarerialInstanceAllEditorOnlyTextureParameters(UMaterialInstance* instance);
+	TMap<FMaterialParameterInfo, FMaterialParameterMetadata>& EnableMaterialInstanceEidtorOnlyParamter(
+		UMaterialInstanceConstant* instance,
+		FName parameterName,
+		EMaterialParameterType parameterType);
 
-	TArray<struct FScalarParameterValue>& EnableMarerialInstanceEditorOnlyScalarParameter(UMaterialInstance* instance, FName paramterName);
-	TArray<struct FScalarParameterValue>& EnableMarerialInstanceEditorOnlyScalarParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
-	TArray<struct FScalarParameterValue>& DisableMarerialInstanceEditorOnlyScalarParameter(UMaterialInstance* instance, FName paramterName);
-	TArray<struct FScalarParameterValue>& DisableMarerialInstanceEditorOnlyScalarParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
-	void ClearMarerialInstanceAllEditorOnlyScalarParameters(UMaterialInstance* instance);
+	TMap<FMaterialParameterInfo, FMaterialParameterMetadata>& DisableMaterialInstanceEidtorOnlyParamter(
+		UMaterialInstanceConstant* instance,
+		FName parameterName,
+		EMaterialParameterType parameterType);
+	
+	void SetMaterialInstanceStaticSwitchParameterValue(UMaterialInstance* Instance, FName ParameterName, bool SwitchValue, bool bOverride);
 
-	TArray<struct FVectorParameterValue>& EnableMarerialInstanceEditorOnlyVectorParameter(UMaterialInstance* instance, FName paramterName);
-	TArray<struct FVectorParameterValue>& EnableMarerialInstanceEditorOnlyVectorParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
-	TArray<struct FVectorParameterValue>& DisableMarerialInstanceEditorOnlyVectorParameter(UMaterialInstance* instance, FName paramterName);
-	TArray<struct FVectorParameterValue>& DisableMarerialInstanceEditorOnlyVectorParameters(UMaterialInstance* instance, TArray<FName> paramterNames);
-	void ClearMarerialInstanceAllEditorOnlyVectorParameters(UMaterialInstance* instance);
 
-	TMap<FMaterialParameterInfo, FMaterialParameterMetadata>& EnableMaterialInstanceEidtorOnlyParamter(UMaterialInstance* instance, FName parameterName, EMaterialParameterType parameterType);
+	UMaterialEditorInstanceConstant * ResaveMaterialInstanceConstantAsset(UMaterialInstanceConstant* Instance);
 };

@@ -3,28 +3,51 @@
 // ------------------------------Public Functions------------------------------//
 // ------------------------------(Call In Editor)------------------------------//
 
-void USPAST_BatchEditorAssetsTool::dbTool(FName paramterName) {
+void USPAST_BatchEditorAssetsTool::dbTool() {
+	for (auto asset : UEditorUtilityLibrary::GetSelectedAssetsOfClass(UMaterialInterface::StaticClass())) {
+		UMaterialInterface* instance = (UMaterialInterface*)asset;
 
-	for (auto asset : UEditorUtilityLibrary::GetSelectedAssetsOfClass(UMaterialInstance::StaticClass())) {
-		UMaterialInstance* instance = (UMaterialInstance*)asset;
-		EnableMaterialInstanceEidtorOnlyParamter(instance, paramterName, EMaterialParameterType::StaticSwitch);
-	}
-	
+		UMaterialInstanceConstant* a = NewObject<UMaterialInstanceConstant>();
+		a->SetParentEditorOnly(instance);
+		a->PostEditChange();
+		SPAST_Print(a->Parent->GetName());
+
+		for (auto ty : AssetSTD::FMaterialParameterType) {
+			TMap<FMaterialParameterInfo, FMaterialParameterMetadata> OutputParams;
+			a->GetAllParametersOfType(ty, OutputParams);
+
+			for (auto opk : OutputParams) {
+				SPAST_Print(opk.Key.Name.ToString());
+			}
+		}
+			
+	};
+
 }
 
-void USPAST_BatchEditorAssetsTool::cClass() {
+void USPAST_BatchEditorAssetsTool::AssetsClass() {
 	SPAST_CheckAssetsClass(UEditorUtilityLibrary::GetSelectedAssetData());
 }
 
-void USPAST_BatchEditorAssetsTool::cTexture() {
+void USPAST_BatchEditorAssetsTool::TextureInfo() {
 	SPAST_CheckAssetsTexture(UEditorUtilityLibrary::GetSelectedAssetData());
 }
 
-void USPAST_BatchEditorAssetsTool::mdDuplicate(FString SubfolderName,
+void USPAST_BatchEditorAssetsTool::DuplicateNearby(FString SubfolderName,
 	bool UseSubfolder, bool OverwriteExists,
 	int DuplicateNum) {
 	SPAST_DuplicateAssets(UEditorUtilityLibrary::GetSelectedAssetData(), SubfolderName, UseSubfolder, OverwriteExists, DuplicateNum);
 }
+
+void USPAST_BatchEditorAssetsTool::InstanceParamterSwitch(
+	FName ParamterName,
+	bool Enable) {
+	for (UObject * asset : UEditorUtilityLibrary::GetSelectedAssetsOfClass(UMaterialInstance::StaticClass())) {
+		UMaterialInstanceConstant* instance = (UMaterialInstanceConstant*)asset;
+		SPAST_MaterialInstanceParamterSwitch(instance, ParamterName, Enable);
+	}
+};
+
 
 
 // ------------------------------Public Functions------------------------------//
@@ -70,7 +93,7 @@ void USPAST_BatchEditorAssetsTool::SPAST_CheckAssetsTexture(TArray<FAssetData> A
 };
 
 /**
-* @brief Duplicate a series assets. Overwrite is not recommended for material type assets.
+* @brief DuplicateNearby a series assets. Overwrite is not recommended for material type assets.
 *
 * @param <AssetsData>		[TArray<FAssetData>] UEditorUtilityLibrary::GetSelectedAssetData()
 * @param <SubfolderName>	[FString] The sub folder name to duplicate the new assets.
@@ -112,7 +135,35 @@ TArray<FAssetData> USPAST_BatchEditorAssetsTool::SPAST_DuplicateAssets(TArray<FA
 	return DuplicatedAssets;
 }
 
+void USPAST_BatchEditorAssetsTool::SPAST_MaterialInstanceParamterSwitch(
+	UMaterialInstanceConstant* Instance,
+	FName ParamterName,
+	bool Enable
+) {
+	for (int i = 0; i < AssetSTD::FMaterialParameterType.Max(); i++) {
+		if (Enable) {
+			EnableMaterialInstanceEidtorOnlyParamter(Instance, ParamterName, AssetSTD::FMaterialParameterType[i]);
+		}
+		else
+		{
+			DisableMaterialInstanceEidtorOnlyParamter(Instance, ParamterName, AssetSTD::FMaterialParameterType[i]);
+		}
+	}
+
+	ResaveMaterialInstanceConstantAsset(Instance);
+};
+
+
 //------------------------------Private Functions------------------------------//
+
+TArray<FString> USPAST_BatchEditorAssetsTool::GetViewportBrowserPath(){
+	FContentBrowserModule & ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+	
+	TArray<FString> PathViewFolders;
+	ContentBrowserModule.Get().GetSelectedPathViewFolders(PathViewFolders);
+
+	return PathViewFolders;
+};
 
 void USPAST_BatchEditorAssetsTool::CheckAssetClass(FAssetData AssetData) {
 	
@@ -271,7 +322,7 @@ std::tuple<FString, FString, FString> USPAST_BatchEditorAssetsTool::GetAssetPath
 };
 
 /**
- * @brief Duplicate a single asset. Overwrite is not recommended for material type assets.
+ * @brief DuplicateNearby a single asset. Overwrite is not recommended for material type assets.
  * 
  * @param <DestinationDirectory>[FString] The folder name to duplicate the asset.
  * @param <SourceAssetPath>		[FString] The source asset path.
@@ -342,270 +393,83 @@ int USPAST_BatchEditorAssetsTool::MaxNumSubfix(FString DirectoryPath, FString As
 	return maxSubfix;
 };
 
-TArray<struct FTextureParameterValue> & USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyTextureParameter(UMaterialInstance* instance, FName paramterName) {
-	TArray< FMaterialParameterInfo > OutParameterInfo;
-	TArray< FGuid > OutParameterGUID;
-	instance->GetAllTextureParameterInfo(OutParameterInfo, OutParameterGUID);
+UMaterialInstanceConstant* USPAST_BatchEditorAssetsTool::CreateMaterialInstance(UMaterialInterface* ParentMaterial, const FString& InstanceName, FString InstanceDict) {
+	
+	FAssetToolsModule& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+	UMaterialInstanceConstantFactoryNew* MaterialInstanceConstantFactory = NewObject<UMaterialInstanceConstantFactoryNew>();
+	
+	UObject* MaterialInstance = AssetToolsModule.Get().CreateAsset(InstanceName, InstanceDict ,UMaterialInstanceConstant::StaticClass(), MaterialInstanceConstantFactory);
 
-	for (FTextureParameterValue value: instance->TextureParameterValues) {
-		if (value.ParameterInfo.Name == paramterName) {
-			return instance->TextureParameterValues;
-		}
+	if (UMaterialInstanceConstant* CreatedMaterialInstance = Cast<UMaterialInstanceConstant>(MaterialInstance))
+	{
+		CreatedMaterialInstance->SetParentEditorOnly(ParentMaterial);
+		CreatedMaterialInstance->PostEditChange();
+		ParentMaterial->PostEditChange();
+
+		return (UMaterialInstanceConstant * )MaterialInstance;
 	}
 
-	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
-		if (parameterInfo.Name == paramterName) {
-			
-			UTexture* textureObj;
-			instance->GetTextureParameterDefaultValue(parameterInfo, textureObj);
-
-			FTextureParameterValue txv = (FTextureParameterValue)parameterInfo;
-			txv.ParameterValue = textureObj;
-
-			instance->TextureParameterValues.Emplace(txv);
-		}
-	}
-
-	return instance->TextureParameterValues;
+	return NULL;
 };
 
-TArray<struct FTextureParameterValue> & USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyTextureParameters(UMaterialInstance* instance, TArray<FName> paramterNames) {
-	TArray< FMaterialParameterInfo > OutParameterInfo;
-	TArray< FGuid > OutParameterGUID;
-	instance->GetAllTextureParameterInfo(OutParameterInfo, OutParameterGUID);
+TMap<FMaterialParameterInfo, FMaterialParameterMetadata>& USPAST_BatchEditorAssetsTool::EnableMaterialInstanceEidtorOnlyParamter(UMaterialInstanceConstant* instance, FName parameterName, EMaterialParameterType parameterType) {
 
-	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
-
-		if ( paramterNames.Contains(parameterInfo.Name)) {
-
-			bool bUnEnabled = false;
-
-			for (FTextureParameterValue value : instance->TextureParameterValues) {
-				
-				if (value.ParameterInfo.Name == parameterInfo.Name) {
-					bUnEnabled = true;
-				}
-			}
-
-			if (bUnEnabled) {
-				UTexture* texDefault;
-				instance->GetTextureParameterDefaultValue(parameterInfo, texDefault);
-
-				FTextureParameterValue txv = (FTextureParameterValue)parameterInfo;
-				txv.ParameterValue = texDefault;
-
-				instance->TextureParameterValues.Emplace(txv);
-			}
-			
-			
-		}
-	}
-
-	return instance->TextureParameterValues;
-};
-
-TArray<struct FTextureParameterValue> & USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyTextureParameter(UMaterialInstance* instance, FName paramterName) {
-	for (auto TextureInfo : instance->TextureParameterValues) {
-		if (TextureInfo.ParameterInfo.Name == paramterName) {
-			instance->TextureParameterValues.Remove(TextureInfo);
-		}
-	}
-
-	return instance->TextureParameterValues;
-}
-
-TArray<struct FTextureParameterValue>& USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyTextureParameters(UMaterialInstance* instance, TArray<FName> paramterNames) {
-	for (auto TextureInfo : instance->TextureParameterValues) {
-		if (paramterNames.Contains(TextureInfo.ParameterInfo.Name)) {
-			instance->TextureParameterValues.Remove(TextureInfo);
-		}
-	}
-
-	return instance->TextureParameterValues;
-}
-
-void USPAST_BatchEditorAssetsTool::ClearMarerialInstanceAllEditorOnlyTextureParameters(UMaterialInstance* instance) {
-	instance->TextureParameterValues.Empty();
-};
-
-
-TArray<struct FScalarParameterValue>& USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyScalarParameter(UMaterialInstance* instance, FName paramterName) {
-	TArray< FMaterialParameterInfo > OutParameterInfo;
-	TArray< FGuid > OutParameterGUID;
-	instance->GetAllScalarParameterInfo(OutParameterInfo, OutParameterGUID);
-
-	for (FScalarParameterValue value : instance->ScalarParameterValues) {
-		if (value.ParameterInfo.Name == paramterName) {
-			return instance->ScalarParameterValues;
-		}
-	}
-
-	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
-		if (parameterInfo.Name == paramterName) {
-			float scalarDefault;
-			instance->GetScalarParameterDefaultValue(parameterInfo, scalarDefault);
-
-			FScalarParameterValue sv = (FScalarParameterValue)parameterInfo;
-			sv.ParameterValue = scalarDefault;
-
-			instance->ScalarParameterValues.Emplace(sv);
-		}
-	}
-
-	return instance->ScalarParameterValues;
-};
-
-TArray<struct FScalarParameterValue>& USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyScalarParameters(UMaterialInstance* instance, TArray<FName> paramterNames) {
-	TArray< FMaterialParameterInfo > OutParameterInfo;
-	TArray< FGuid > OutParameterGUID;
-	instance->GetAllScalarParameterInfo(OutParameterInfo, OutParameterGUID);
-
-	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
-		if (paramterNames.Contains(parameterInfo.Name)) {
-
-			bool bUnEnabled = false;
-
-			for (FScalarParameterValue value : instance->ScalarParameterValues) {
-
-				if (value.ParameterInfo.Name == parameterInfo.Name) {
-					bUnEnabled = true;
-				}
-			}
-
-			if (bUnEnabled) {
-				float scalarDefault;
-				instance->GetScalarParameterDefaultValue(parameterInfo, scalarDefault);
-
-				FScalarParameterValue sv = (FScalarParameterValue)parameterInfo;
-				sv.ParameterValue = scalarDefault;
-
-				instance->ScalarParameterValues.Emplace(sv);
-			}
-		}
-	}
-
-	return instance->ScalarParameterValues;
-};
-
-TArray<struct FScalarParameterValue>& USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyScalarParameter(UMaterialInstance* instance, FName paramterName) {
-	for (auto ScalarInfo : instance->ScalarParameterValues) {
-		if (ScalarInfo.ParameterInfo.Name == paramterName) {
-			instance->ScalarParameterValues.Remove(ScalarInfo);
-		}
-	}
-
-	return instance->ScalarParameterValues;
-};
-
-TArray<struct FScalarParameterValue>& USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyScalarParameters(UMaterialInstance* instance, TArray<FName> paramterNames) {
-	for (auto ScalarInfo : instance->ScalarParameterValues) {
-		if (paramterNames.Contains(ScalarInfo.ParameterInfo.Name)) {
-			instance->ScalarParameterValues.Remove(ScalarInfo);
-		}
-	}
-
-	return instance->ScalarParameterValues;
-};
-
-void USPAST_BatchEditorAssetsTool::ClearMarerialInstanceAllEditorOnlyScalarParameters(UMaterialInstance* instance) {
-	instance->ScalarParameterValues.Empty();
-};
-
-TArray<struct FVectorParameterValue>& USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyVectorParameter(UMaterialInstance* instance, FName paramterName){
-	TArray< FMaterialParameterInfo > OutParameterInfo;
-	TArray< FGuid > OutParameterGUID;
-	instance->GetAllVectorParameterInfo(OutParameterInfo, OutParameterGUID);
-
-	for (FVectorParameterValue value : instance->VectorParameterValues) {
-		if (value.ParameterInfo.Name == paramterName) {
-			return instance->VectorParameterValues;
-		}
-	}
-
-	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
-		if (parameterInfo.Name== paramterName) {
-			FLinearColor vectorDefault;
-			instance->GetVectorParameterDefaultValue(parameterInfo, vectorDefault);
-
-			FVectorParameterValue vv = (FVectorParameterValue)parameterInfo;
-			vv.ParameterValue = vectorDefault;
-
-			instance->VectorParameterValues.Emplace(vv);
-		}
-	}
-
-	return instance->VectorParameterValues;
-};
-
-TArray<struct FVectorParameterValue>& USPAST_BatchEditorAssetsTool::EnableMarerialInstanceEditorOnlyVectorParameters(UMaterialInstance* instance, TArray<FName> paramterNames){
-	TArray< FMaterialParameterInfo > OutParameterInfo;
-	TArray< FGuid > OutParameterGUID;
-	instance->GetAllVectorParameterInfo(OutParameterInfo, OutParameterGUID);
-
-	for (FMaterialParameterInfo parameterInfo : OutParameterInfo) {
-		if (paramterNames.Contains(parameterInfo.Name)) {
-
-			bool bUnEnabled = false;
-
-			for (FVectorParameterValue value : instance->VectorParameterValues) {
-
-				if (value.ParameterInfo.Name == parameterInfo.Name) {
-					bUnEnabled = true;
-				}
-			}
-
-			if (bUnEnabled) {
-				FLinearColor vectorDefault;
-				instance->GetVectorParameterDefaultValue(parameterInfo, vectorDefault);
-
-				FVectorParameterValue vv = (FVectorParameterValue)parameterInfo;
-				vv.ParameterValue = vectorDefault;
-
-				instance->VectorParameterValues.Emplace(vv);
-			}
-		}
-	}
-
-	return instance->VectorParameterValues;
-};
-
-TArray<struct FVectorParameterValue>& USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyVectorParameter(UMaterialInstance* instance, FName paramterName){
-	for (auto VectorInfo : instance->VectorParameterValues) {
-		if (VectorInfo.ParameterInfo.Name== paramterName) {
-			instance->VectorParameterValues.Remove(VectorInfo);
-		}
-	}
-
-	return instance->VectorParameterValues;
-};
-
-TArray<struct FVectorParameterValue>& USPAST_BatchEditorAssetsTool::DisableMarerialInstanceEditorOnlyVectorParameters(UMaterialInstance* instance, TArray<FName> paramterNames){
-	for (auto VectorInfo : instance->VectorParameterValues) {
-		if (paramterNames.Contains(VectorInfo.ParameterInfo.Name)) {
-			instance->VectorParameterValues.Remove(VectorInfo);
-		}
-	}
-
-	return instance->VectorParameterValues;
-};
-
-void USPAST_BatchEditorAssetsTool::ClearMarerialInstanceAllEditorOnlyVectorParameters(UMaterialInstance* instance) {
-	instance->VectorParameterValues.Empty();
-};
-
-TMap<FMaterialParameterInfo, FMaterialParameterMetadata>& USPAST_BatchEditorAssetsTool::EnableMaterialInstanceEidtorOnlyParamter(UMaterialInstance* instance, FName parameterName, EMaterialParameterType parameterType) {
-		
-	TMap<FMaterialParameterInfo, FMaterialParameterMetadata> * OutParameterInfoMap = new TMap<FMaterialParameterInfo, FMaterialParameterMetadata>;
+	TMap<FMaterialParameterInfo, FMaterialParameterMetadata>* OutParameterInfoMap = new TMap<FMaterialParameterInfo, FMaterialParameterMetadata>;
 	instance->GetAllParametersOfType(parameterType, *OutParameterInfoMap);
 
 	FMaterialInstanceParameterUpdateContext context(instance);
 
-	for (auto & parameter : *OutParameterInfoMap) {
+	for (auto& parameter : *OutParameterInfoMap) {
 		if (parameter.Key.Name == parameterName) {
-			parameter.Value.bOverride = 1;
 			context.SetParameterValueEditorOnly(parameter.Key, parameter.Value);
 		}
 	}
 
-	return * OutParameterInfoMap;
+	return *OutParameterInfoMap;
+};
+
+TMap<FMaterialParameterInfo, FMaterialParameterMetadata>& USPAST_BatchEditorAssetsTool::DisableMaterialInstanceEidtorOnlyParamter(UMaterialInstanceConstant* instance, FName parameterName, EMaterialParameterType parameterType) {
+
+	TMap<FMaterialParameterInfo, FMaterialParameterMetadata>* OutParameterInfoMap = new TMap<FMaterialParameterInfo, FMaterialParameterMetadata>;
+	instance->GetAllParametersOfType(parameterType, *OutParameterInfoMap);
+
+	FMaterialInstanceParameterUpdateContext context(instance);
+
+	UMaterialEditorInstanceConstant* MaterialEditorInstance = NewObject<UMaterialEditorInstanceConstant>(GetTransientPackage(), NAME_None, RF_Transactional);
+	MaterialEditorInstance->SetSourceInstance(instance);
+
+	for (FEditorParameterGroup& group : MaterialEditorInstance->ParameterGroups) {
+		for (TObjectPtr<UDEditorParameterValue> &  param : group.Parameters) {
+			param->bOverride = 0;
+			SPAST_Print(TABLESTRING_2Column(TablePattern_2Column_Content,TCHAR_TO_UTF8(*param->ParameterInfo.Name.ToString()), param->bOverride? "1" : "0").c_str());
+		}
+	}
+
+	MaterialEditorInstance->CopyToSourceInstance(true);
+
+	UMaterialInstanceConstant* a = NewObject<UMaterialInstanceConstant>(GetTransientPackage());
+	return *OutParameterInfoMap;
+};
+
+void USPAST_BatchEditorAssetsTool::SetMaterialInstanceStaticSwitchParameterValue(UMaterialInstance* Instance, FName ParameterName, bool SwitchValue, bool bOverride) {
+	TArray<FGuid> Guids;
+	TArray<FMaterialParameterInfo> OutParameterInfo;
+	Instance->GetAllStaticSwitchParameterInfo(OutParameterInfo, Guids);
+
+	FStaticParameterSet StaticParameters = Instance->GetStaticParameters();
+
+	Instance->InitStaticPermutation();
+	
+};
+
+
+UMaterialEditorInstanceConstant * USPAST_BatchEditorAssetsTool::ResaveMaterialInstanceConstantAsset(UMaterialInstanceConstant* Instance) {
+
+	// The material instance editor window puts MaterialLayersParameters into our StaticParameters, if we don't do this, our settings could get wiped out on first launch of the material editor.
+	// If there's ever a cleaner and more isolated way of populating MaterialLayersParameters, we should do that instead.
+	
+	UMaterialEditorInstanceConstant* MaterialEditorInstance = NewObject<UMaterialEditorInstanceConstant>(GetTransientPackage(), NAME_None, RF_Transactional);
+	MaterialEditorInstance->SetSourceInstance(Instance);
+
+	return MaterialEditorInstance;
 };
