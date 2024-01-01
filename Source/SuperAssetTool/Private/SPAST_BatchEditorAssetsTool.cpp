@@ -4,25 +4,7 @@
 // ------------------------------(Call In Editor)------------------------------//
 
 void USPAST_BatchEditorAssetsTool::dbTool() {
-	for (auto asset : UEditorUtilityLibrary::GetSelectedAssetsOfClass(UMaterialInterface::StaticClass())) {
-		UMaterialInterface* instance = (UMaterialInterface*)asset;
-
-		UMaterialInstanceConstant* a = NewObject<UMaterialInstanceConstant>();
-		a->SetParentEditorOnly(instance);
-		a->PostEditChange();
-		SPAST_Print(a->Parent->GetName());
-
-		for (auto ty : AssetSTD::FMaterialParameterType) {
-			TMap<FMaterialParameterInfo, FMaterialParameterMetadata> OutputParams;
-			a->GetAllParametersOfType(ty, OutputParams);
-
-			for (auto opk : OutputParams) {
-				SPAST_Print(opk.Key.Name.ToString());
-			}
-		}
-			
-	};
-
+	
 }
 
 void USPAST_BatchEditorAssetsTool::AssetsClass() {
@@ -138,8 +120,7 @@ TArray<FAssetData> USPAST_BatchEditorAssetsTool::SPAST_DuplicateAssets(TArray<FA
 void USPAST_BatchEditorAssetsTool::SPAST_MaterialInstanceParamterSwitch(
 	UMaterialInstanceConstant* Instance,
 	FName ParamterName,
-	bool Enable
-) {
+	bool Enable) {
 	for (int i = 0; i < AssetSTD::FMaterialParameterType.Max(); i++) {
 		if (Enable) {
 			EnableMaterialInstanceEidtorOnlyParamter(Instance, ParamterName, AssetSTD::FMaterialParameterType[i]);
@@ -305,7 +286,6 @@ FAssetData USPAST_BatchEditorAssetsTool::setTexture2DInfo(UTexture2D* TextureObj
 	return TextureObject;
 };
 
-
 /**
 * @brief Return asset name, asset package name(directory path), asset full path
 * 
@@ -430,38 +410,62 @@ TMap<FMaterialParameterInfo, FMaterialParameterMetadata>& USPAST_BatchEditorAsse
 
 TMap<FMaterialParameterInfo, FMaterialParameterMetadata>& USPAST_BatchEditorAssetsTool::DisableMaterialInstanceEidtorOnlyParamter(UMaterialInstanceConstant* instance, FName parameterName, EMaterialParameterType parameterType) {
 
-	TMap<FMaterialParameterInfo, FMaterialParameterMetadata>* OutParameterInfoMap = new TMap<FMaterialParameterInfo, FMaterialParameterMetadata>;
-	instance->GetAllParametersOfType(parameterType, *OutParameterInfoMap);
-
 	FMaterialInstanceParameterUpdateContext context(instance);
 
 	UMaterialEditorInstanceConstant* MaterialEditorInstance = NewObject<UMaterialEditorInstanceConstant>(GetTransientPackage(), NAME_None, RF_Transactional);
 	MaterialEditorInstance->SetSourceInstance(instance);
 
-	for (FEditorParameterGroup& group : MaterialEditorInstance->ParameterGroups) {
-		for (TObjectPtr<UDEditorParameterValue> &  param : group.Parameters) {
-			param->bOverride = 0;
-			SPAST_Print(TABLESTRING_2Column(TablePattern_2Column_Content,TCHAR_TO_UTF8(*param->ParameterInfo.Name.ToString()), param->bOverride? "1" : "0").c_str());
+	if (parameterType != EMaterialParameterType::StaticSwitch) {
+		TArray<FEditorParameterGroup> ResetGroups;
+
+		for (FEditorParameterGroup& Group : MaterialEditorInstance->ParameterGroups) {
+		FEditorParameterGroup DuplicatedGroup = FEditorParameterGroup();
+		DuplicatedGroup.GroupAssociation = Group.GroupAssociation;
+		DuplicatedGroup.GroupName = Group.GroupName;
+		DuplicatedGroup.GroupSortPriority = Group.GroupSortPriority;
+
+		for (UDEditorParameterValue* Parameter : Group.Parameters){
+			if (Parameter->ParameterInfo.Name != parameterName)
+			{
+				DuplicatedGroup.Parameters.Add(Parameter);
+			}
 		}
+		ResetGroups.Add(DuplicatedGroup);
+		}
+
+		MaterialEditorInstance->ParameterGroups = ResetGroups;
+		MaterialEditorInstance->CopyToSourceInstance(true);
+	}
+	else {
+		TArray<FMaterialParameterInfo> OutputInfos;
+		TArray<FGuid> OutputGuids;
+		instance->GetAllStaticSwitchParameterInfo(OutputInfos, OutputGuids);
+
+		TMap<FMaterialParameterInfo, FMaterialParameterMetadata>* OutParameterInfoMap = new TMap<FMaterialParameterInfo, FMaterialParameterMetadata>;
+		instance->GetAllParametersOfType(parameterType, *OutParameterInfoMap);
+
+
+		for (auto OutputInfo : OutputInfos)
+		{
+			if (OutputInfo.Name == parameterName) {
+				FMaterialParameterMetadata OutputMetaData;
+				instance->GetParameterDefaultValue(parameterType, OutputInfo, OutputMetaData);
+
+				OutputMetaData.bOverride = false;
+				OutputMetaData.bDynamicSwitchParameter = false;
+
+				context.SetParameterValueEditorOnly(OutputInfo, OutputMetaData);
+			}
+			
+		} 
+
 	}
 
-	MaterialEditorInstance->CopyToSourceInstance(true);
+	TMap<FMaterialParameterInfo, FMaterialParameterMetadata>* OutParameterInfoMap = new TMap<FMaterialParameterInfo, FMaterialParameterMetadata>;
+	instance->GetAllParametersOfType(parameterType, *OutParameterInfoMap);
 
-	UMaterialInstanceConstant* a = NewObject<UMaterialInstanceConstant>(GetTransientPackage());
 	return *OutParameterInfoMap;
 };
-
-void USPAST_BatchEditorAssetsTool::SetMaterialInstanceStaticSwitchParameterValue(UMaterialInstance* Instance, FName ParameterName, bool SwitchValue, bool bOverride) {
-	TArray<FGuid> Guids;
-	TArray<FMaterialParameterInfo> OutParameterInfo;
-	Instance->GetAllStaticSwitchParameterInfo(OutParameterInfo, Guids);
-
-	FStaticParameterSet StaticParameters = Instance->GetStaticParameters();
-
-	Instance->InitStaticPermutation();
-	
-};
-
 
 UMaterialEditorInstanceConstant * USPAST_BatchEditorAssetsTool::ResaveMaterialInstanceConstantAsset(UMaterialInstanceConstant* Instance) {
 

@@ -163,8 +163,7 @@ private:
 		UMaterialInstanceConstant* instance,
 		FName parameterName,
 		EMaterialParameterType parameterType);
-	
-	void SetMaterialInstanceStaticSwitchParameterValue(UMaterialInstance* Instance, FName ParameterName, bool SwitchValue, bool bOverride);
+
 
 
 	UMaterialEditorInstanceConstant * ResaveMaterialInstanceConstantAsset(UMaterialInstanceConstant* Instance);
